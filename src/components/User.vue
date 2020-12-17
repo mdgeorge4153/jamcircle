@@ -11,12 +11,12 @@
       {{ username }}
       </div>
 
-    <div v-if="muted" class="absolute-top-right">
+    <div v-if="state == 'muted'" class="absolute-top-right">
       <q-chip icon="volume_off">Muted</q-chip>
       </div>
 
-    <div v-if="solo"  class="absolute-top-right">
-      <q-chip icon="star">Solo</q-chip>
+    <div v-if="state == 'solo'"  class="absolute-top-right">
+      <q-chip color="green" text-color="white" icon="star">Solo</q-chip>
       </div>
 
   </div>
@@ -43,7 +43,7 @@ export default {
     username: String,
     icon:     String,
     image:    String,
-    muted:    Boolean,
+    state:    String, // one of 'solo', 'muted', or 'playing'
     stream:   MediaStream,
     src:      String,
     solo:     Boolean,

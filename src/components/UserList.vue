@@ -2,14 +2,9 @@
 <template>
   <div class="q-pa-md">
     <div class="row wrap justify-center q-gutter-md item-start">
-      <q-responsive :ratio="4/3" class="col">
-        <user-future />
-        </q-responsive>
-
-      <q-responsive :ratio="4/3" class="col">
-        <user username="Alice"/>
-        </q-responsive>
-      </div> </div>
+      <q-responsive v-for="user in users" v-bind:key="user.username" :ratio="4/3" class="col">
+        <user v-bind="user" />
+        </q-responsive> </div> </div>
 </template>
 
 <style>
