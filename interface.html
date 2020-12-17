@@ -1,0 +1,49 @@
+<html>
+
+<head>
+<style type="text/css">
+	video {
+	  background: #222;
+	  margin: 0 0 20px 0;
+	  --width: 100%;
+	  width: var(--width);
+	  height: calc(var(--width) * 0.75);
+	}
+
+	.player {
+		border: 1px solid black;
+		margin: 1em;
+		flex-basis: 200px;
+	}
+
+	#players {
+		display:flex;
+		flex-wrap: wrap;
+		background: gray;
+		height: 50%;
+	}
+
+	</style>
+</head>
+
+
+<body>
+
+<div id="players">
+	<div class="player" id="alice">
+		<video id="alice-video" autoplay playsinline></video>
+		</div>
+	<div class="player" id="bob">
+		<video id="bob-video" autoplay playsinline></video>
+		</div>
+	<div class="player" id="chuck">
+		<video id="chuck-video" autoplay playsinline></video>
+		</div>
+	<div class="player" id="dave">
+		<video id="dave-video" autoplay playsinline></video>
+		</div>
+	</div>
+
+</body>
+
+</html>
