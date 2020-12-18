@@ -1,21 +1,15 @@
 <!-- UserList is responsible for the layout and animation behavior of the Users -->
 <template>
   <div class="q-pa-md">
-    <div class="row wrap justify-center q-gutter-md item-start">
+    <transition-group name = "user-list" tag="div" class="user-list row wrap justify-center q-gutter-md item-start">
       <q-responsive v-for="user in users" v-bind:key="user.username" :ratio="4/3" class="col">
         <user v-bind="user" />
-        </q-responsive> </div> </div>
+        </q-responsive> </transition-group> </div>
 </template>
 
 <style>
-.user-list {
-  width: 100%;
-  height: 100%;
-}
-
-.user-list > * {
-  flex-grow: 1;
-  min-width: 200px;
+.user-list-move {
+  transition: transform 1s;
 }
 
 </style>
