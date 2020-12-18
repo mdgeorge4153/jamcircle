@@ -52,6 +52,9 @@ export default {
     stream(newV, oldV) {
       console.log("changed stream from", oldV, " to ", newV);
     },
+    src(newV, oldV) {
+      console.log("changed stream from", oldV, " to ", newV);
+    }
   }
 }
 </script>

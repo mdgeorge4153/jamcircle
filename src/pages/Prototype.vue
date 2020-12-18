@@ -42,8 +42,8 @@ import UserList from 'components/UserList.vue';
 
 const alice = {username: "Alice",        icon: "fas fa-guitar", state:'solo',  src: "https://www.w3schools.com/html/mov_bbb.mp4"};
 const bob   = {username: "Bob and Jane", icon: "fas fa-users",  state:'muted', src: "https://www.w3schools.com/html/mov_bbb.mp4"};
-const chuck = {username: "Chuck",        icon: "fas fa-piano", state:'solo'};
-const dave  = {username: "Dave",         icon: "fas fa-drum",  state:'playing'};
+const chuck = {username: "Chuck",        icon: "fas fa-piano", state:'solo',   src: null};
+const dave  = {username: "Dave",         icon: "fas fa-drum",  state:'playing', src: null};
 const me = window.me = {username: "Me", stream: null, state:'playing'};
 
 let users = [alice, bob, me, chuck, dave];
@@ -67,11 +67,19 @@ export default {
   methods: {
     fastForward() {
       this.users = [alice, bob, chuck, dave, me];
+      this.fixVideos();
     },
     cycle() {
       let nextSolo = this.users.findIndex((user,i) => i > 0 && user.state == "solo");
       nextSolo = nextSolo == -1 ? 1 : nextSolo;
       this.users = this.users.slice(nextSolo).concat(this.users.slice(0,nextSolo));
+      this.fixVideos();
+    },
+    fixVideos() {
+      let n   = this.users.indexOf(me);
+      let src = "https://www.w3schools.com/html/mov_bbb.mp4";
+      this.users.forEach((u,i) => u.src = i < n ? src
+                                        : (i > n ? null : u.src));
     },
   },
 }
