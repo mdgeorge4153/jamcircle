@@ -18,29 +18,11 @@
 export default {
   name: 'Client',
 
-  data() {
-    return {
-      users: [],
-      me: {
-        username: 'Alice',
-        offer: null,
-        accept: null,
-      },
-    };
+  computed: {
+    me()    { return this.$store.state.me; },
+    users() { return this.$store.state.users; },
   },
-
-  sockets: {
-
-    connect() {
-      console.log('connect');
-      this.$socket.client.emit('update',this.me);
-    },
-
-    update(users) {
-      console.log('new users: ' + users);
-      this.users = users;
-    },
-  },
+    
 
   methods: {
 
