@@ -4,6 +4,7 @@
       <q-toolbar>
         <q-toolbar-title class="text-h5">JamCircle</q-toolbar-title>
         <q-space/>
+        <user-info v-bind:user="me"/>
         <q-btn icon="cached" @click="cycle" />
         </q-toolbar> </q-header>
     <q-page-container>
@@ -39,18 +40,19 @@
 
 <script>
 import UserList from 'components/UserList.vue';
+import UserInfo from 'components/UserInfo.vue';
 
 const alice = {username: "Alice",        icon: "fas fa-guitar", state:'solo',  src: "https://www.w3schools.com/html/mov_bbb.mp4"};
 const bob   = {username: "Bob and Jane", icon: "fas fa-users",  state:'muted', src: "https://www.w3schools.com/html/mov_bbb.mp4"};
 const chuck = {username: "Chuck",        icon: "fas fa-piano", state:'solo',   src: null};
 const dave  = {username: "Dave",         icon: "fas fa-drum",  state:'playing', src: null};
-const me = window.me = {username: "Me", stream: null, state:'playing'};
+const me = window.me = {username: "", icon:"fas fa-drum", stream: null, state:'playing'};
 
 let users = [alice, bob, me, chuck, dave];
 
 export default {
   name: 'Prototype',
-  components: { UserList },
+  components: { UserList, UserInfo },
   data () {
     return { me, users, model: 'ready' };
   },

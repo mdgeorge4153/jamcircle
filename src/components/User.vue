@@ -6,16 +6,16 @@
     <user-dummy  v-else-if="src" :src="src" />
     <user-future v-else/>
 
-    <div class="text-h6 absolute-bottom q-ma-sm">
+    <div class="text-h6 absolute-top-left q-ma-sm">
       <q-icon v-if="icon" v-bind:name="icon"/>
       {{ username }}
       </div>
 
-    <div v-if="state == 'muted'" class="absolute-top-right">
+    <div v-if="state == 'muted'" class="absolute-bottom-right">
       <q-chip icon="volume_off">Muted</q-chip>
       </div>
 
-    <div v-if="state == 'solo'"  class="absolute-top-right">
+    <div v-if="state == 'solo'"  class="absolute-bottom-right">
       <q-chip color="green" text-color="white" icon="star">Solo</q-chip>
       </div>
 
