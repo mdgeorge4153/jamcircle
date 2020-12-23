@@ -5,39 +5,73 @@ import io   from 'socket.io-client';
 
 Vue.use(Vuex);
 
+/* user fields:
+ *   from server:
+ *   - username : String  (server)
+ *   - icon     : String  (server)
+ *   - id       : UID     (server)
+ *   - playing  : 'muted' or 'solo' or 'ready'
+ *   local:
+ *   - track    : MediaStreamTrack or null (local)
+ *   - status   : 'future' or 'waiting' or 'ready' or 'me'
+ */
+
 export default function() {
   const store = new Vuex.Store({
     state: {
-        users: [],
-        me: {
-          username: 'Alice',
-          offer: null,
-          accept: null,
-        },
+      users: [],
+
+      username: '',
+      icon:     'fas fa-microphone-alt',
+      playing:  'solo',
+
+      icons: [
+        { name: 'Other',  icon: 'fas fa-microphone-alt' },
+        { name: 'Guitar', icon: 'fas fa-guitar' },
+        { name: 'Drums',  icon: 'fas fa-drum'   },
+        { name: 'Group',  icon: 'fas fa-users'  },
+      ],
+
     },
 
     mutations: {
-      CONNECTED(state) {
-        console.log("received connect mutation", state.users);
-        state.me.username = "Bob";
-        this._vm.$socket.client.emit('update', state.me);
+      UPDATE_SERVER(state) {
+        this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
+      },
+        
+      CHANGE_NAME(state, username) {
+        state.username = username;
+        this._vm.$socket.client.emit('update', { username });
       },
 
-      UPDATED(state, users) {
+      CHANGE_ICON(state, icon) {
+        state.icon = icon;
+        this._vm.$socket.client.emit('update', { icon });
+      },
+
+      SET_PLAYING(state, playing) {
+        state.playing = playing;
+        this._vm.$socket.client.emit('update', { playing });
+      },
+
+      SOCKET_CONNECT(state) {
+        console.log("received connect mutation", state.users);
+        this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
+      },
+
+      SOCKET_UPDATE(state, users) {
         console.log("received update");
-        console.log("changing state from ", state.users, " to ", users);
         state.users = users;
       },
     },
 
     actions: {
-      socket_connect({commit}) {
-        console.log("received connect action");
-        commit('CONNECTED');
+      /* moves this player to the tail */
+      fastForward(context) {
       },
 
-      socket_update({commit}, users) {
-        commit('UPDATED', users);
+      /* causes the head player to fastForward */
+      cycle(context) {
       },
     },
   });

@@ -4,12 +4,12 @@
       <q-toolbar>
         <q-toolbar-title class="text-h5">JamCircle</q-toolbar-title>
         <q-space/>
-        <user-info v-bind:user="me"/>
+        <user-info />
         <q-btn icon="cached" @click="cycle" />
         </q-toolbar> </q-header>
     <q-page-container>
       <q-page>
-        <user-list v-bind:users="users" />
+        <user-list />
         </q-page> </q-page-container>
     <q-footer>
       <q-toolbar>
@@ -20,7 +20,7 @@
         >Jump to end</q-btn>
         <q-space/>
         <q-btn-toggle size="xl"
-          v-model="me.state"
+          v-model="playing"
           toggle-color="secondary"
           push
           :options="[
@@ -41,21 +41,17 @@
 <script>
 import UserList from 'components/UserList.vue';
 import UserInfo from 'components/UserInfo.vue';
-
-const alice = {username: "Alice",        icon: "fas fa-guitar", state:'solo',  src: "https://www.w3schools.com/html/mov_bbb.mp4"};
-const bob   = {username: "Bob and Jane", icon: "fas fa-users",  state:'muted', src: "https://www.w3schools.com/html/mov_bbb.mp4"};
-const chuck = {username: "Chuck",        icon: "fas fa-piano", state:'solo',   src: null};
-const dave  = {username: "Dave",         icon: "fas fa-drum",  state:'playing', src: null};
-const me = window.me = {username: "", icon:"fas fa-drum", stream: null, state:'playing'};
-
-let users = [alice, bob, me, chuck, dave];
+import { makeProperty } from '../util.js';
 
 export default {
   name: 'Prototype',
   components: { UserList, UserInfo },
-  data () {
-    return { me, users, model: 'ready' };
+
+  computed: {
+    playing: makeProperty('playing', 'SET_PLAYING'),
   },
+    
+  /*
   mounted() {
     console.log("mounted");
     const constraints = {
@@ -66,6 +62,7 @@ export default {
     navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => me.stream = stream);
   },
+  */
   methods: {
     fastForward() {
       let n   = this.users.indexOf(me);

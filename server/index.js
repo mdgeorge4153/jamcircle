@@ -9,7 +9,7 @@ const io = require('socket.io')(http);
 let users = [];
 
 io.sockets.on('connection', function (socket) {
-  let user = {socketID: socket.id};
+  let user = {id: socket.id};
   users.push(user);
   console.log('---- create ' + socket.id);
 
@@ -21,11 +21,11 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function() {
     console.log('---- disconnecting ' + socket.id);
-    console.log('   users: ' + users.map(u => " " + u.socketID));
+    console.log('   users: ' + users.map(u => " " + u.id));
     let n = users.indexOf(user);
     console.log('   n: ' + n);
     users = users.slice(0,n).concat(users.slice(n+1));
-    console.log('   users after remove: ' + users.map(u => " " + u.socketID));
+    console.log('   users after remove: ' + users.map(u => " " + u.id));
     io.emit('update', users);
   });
 
