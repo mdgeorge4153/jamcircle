@@ -6,20 +6,20 @@ import io   from 'socket.io-client';
 Vue.use(Vuex);
 
 /* user fields:
- *   from server:
+ *   - id       : UID     (server)
  *   - username : String  (server)
  *   - icon     : String  (server)
- *   - id       : UID     (server)
  *   - playing  : 'muted' or 'solo' or 'ready'
- *   local:
- *   - track    : MediaStreamTrack or null (local)
- *   - status   : 'future' or 'waiting' or 'ready' or 'me'
+ * status:
+ *   - 'past' or 'future' or 'me'
  */
 
 export default function() {
   const store = new Vuex.Store({
     state: {
-      users: [],
+      users:  [],
+      status: {},
+      tracks: {},
 
       username: '',
       icon:     'fas fa-microphone-alt',
@@ -34,11 +34,12 @@ export default function() {
 
     },
 
+    getters: {
+      status: (state) => (id) => state.status[id],
+      track:  (state) => (id) => state.tracks[id],
+    },
+
     mutations: {
-      UPDATE_SERVER(state) {
-        this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
-      },
-        
       CHANGE_NAME(state, username) {
         state.username = username;
         this._vm.$socket.client.emit('update', { username });
@@ -55,23 +56,33 @@ export default function() {
       },
 
       SOCKET_CONNECT(state) {
-        console.log("received connect mutation", state.users);
         this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
       },
 
       SOCKET_UPDATE(state, users) {
-        console.log("received update");
         state.users = users;
+        let status  = 'past';
+        let me      = this._vm.$socket.client.id;
+        for (let {id} of users) {
+          if (id == me) {
+            Vue.set(state.status, id, 'me');
+            status = 'future';
+          }
+          else
+            Vue.set(state.status, id, status);
+        }
       },
     },
 
     actions: {
       /* moves this player to the tail */
       fastForward(context) {
+        // TODO
       },
 
       /* causes the head player to fastForward */
       cycle(context) {
+        this._vm.$socket.client.emit('cycle');
       },
     },
   });

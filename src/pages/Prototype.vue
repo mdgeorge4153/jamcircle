@@ -70,16 +70,7 @@ export default {
       this.fixVideos();
     },
     cycle() {
-      let nextSolo = this.users.findIndex((user,i) => i > 0 && user.state == "solo");
-      nextSolo = nextSolo == -1 ? 1 : nextSolo;
-      this.users = this.users.slice(nextSolo).concat(this.users.slice(0,nextSolo));
-      this.fixVideos();
-    },
-    fixVideos() {
-      let n   = this.users.indexOf(me);
-      let src = "https://www.w3schools.com/html/mov_bbb.mp4";
-      this.users.forEach((u,i) => u.src = i < n ? src
-                                        : (i > n ? null : u.src));
+      this.$store.dispatch('cycle');
     },
   },
 }

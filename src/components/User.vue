@@ -1,8 +1,13 @@
 <!-- User is responsible for positioning elements within card, but not
      sizing.  Sizing is handled by UserList -->
 <template>
-  <div class="user-card text-white">
+  <div class="user-card text-white" v-bind:class="{ me: status == 'me' }">
     <video ref="video" autoplay />
+
+    <div class="absolute-center">
+      <q-icon v-if="status == 'future'" size="lg" name="slow_motion_video"/>
+      <q-circular-progress indeterminate v-if="status == 'past' && !track" size="lg"/>
+      </div>
     <!--
     <user-future v-else/>
     -->
@@ -31,6 +36,10 @@
   width: 100%; height: 100%;
   background: black;
 }
+
+.me {
+  border: 3px solid green;
+}
 </style>
 
 <script>
@@ -44,17 +53,16 @@ export default {
     icon:     String,
     id:       String,
     playing:  String, // one of 'solo', 'muted', or 'playing'
-    track:    MediaStreamTrack,
-    status:   String,
   },
-  watch: {
-    stream(newV, oldV) {
-      console.log("changed stream from", oldV, " to ", newV);
+
+  computed: {
+    status() {
+      return this.$store.getters.status(this.id);
     },
-    src(newV, oldV) {
-      console.log("changed stream from", oldV, " to ", newV);
-    }
-  }
+    track() {
+      return this.$store.getters.track(this.id);
+    },
+  },
 }
 </script>
 

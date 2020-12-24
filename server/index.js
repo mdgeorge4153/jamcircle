@@ -1,7 +1,5 @@
 const express = require('express');
-const cors = require('cors');
 const app = express();
-app.use(cors());
 
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -17,6 +15,16 @@ io.sockets.on('connection', function (socket) {
     console.log('---- update ' + socket.id);
     Object.assign(user, update);
     io.emit('update', users);
+  });
+
+  socket.on('cycle', function() {
+    let nextSolo = users.findIndex((user,i) => i > 0 && user.playing == "solo");
+    nextSolo = nextSolo == -1 ? 1 : nextSolo;
+    users = users.slice(nextSolo).concat(users.slice(0,nextSolo));
+    io.emit('update', users);
+  });
+
+  socket.on('fast forward', function() {
   });
 
   socket.on('disconnect', function() {
