@@ -48,11 +48,20 @@ import UserFuture from 'components/UserFuture.vue';
 export default {
   name: 'User',
   components: { UserFuture },
+
   props: {
     username: String,
     icon:     String,
     id:       String,
     playing:  String, // one of 'solo', 'muted', or 'playing'
+  },
+
+  data() {
+    return { stream: new MediaStream() };
+  },
+  mounted() {
+    this.$refs.video.srcObject = this.stream;
+    this.stream.addTrack(this.track);
   },
 
   computed: {
@@ -63,6 +72,14 @@ export default {
       return this.$store.getters.track(this.id);
     },
   },
+
+  watch: {
+    track() {
+      console.log("track changed");
+      this.stream.addTrack(this.track);
+    },
+  },
+
 }
 </script>
 

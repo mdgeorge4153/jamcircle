@@ -51,18 +51,6 @@ export default {
     playing: makeProperty('playing', 'SET_PLAYING'),
   },
     
-  /*
-  mounted() {
-    console.log("mounted");
-    const constraints = {
-      audio: false,
-      video: true,
-      aspectRatio: 1.7777,
-    }
-    navigator.mediaDevices.getUserMedia(constraints)
-    .then(stream => me.stream = stream);
-  },
-  */
   methods: {
     fastForward() {
       let n   = this.users.indexOf(me);

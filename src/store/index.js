@@ -15,6 +15,11 @@ Vue.use(Vuex);
  */
 
 export default function() {
+
+  // this is for ensuring connection
+  let resolve_connected;
+  let my_id = new Promise((resolve, reject) => resolve_connected = resolve);
+
   const store = new Vuex.Store({
     state: {
       users:  [],
@@ -24,6 +29,8 @@ export default function() {
       username: '',
       icon:     'fas fa-microphone-alt',
       playing:  'solo',
+
+      my_id: my_id,
 
       icons: [
         { name: 'Other',  icon: 'fas fa-microphone-alt' },
@@ -56,7 +63,13 @@ export default function() {
       },
 
       SOCKET_CONNECT(state) {
+        resolve_connected(this._vm.$socket.client.id);
         this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
+      },
+
+      SET_TRACK(state, {id, track}) {
+        console.log("stream update", id, track);
+        Vue.set(state.tracks, id, track);
       },
 
       SOCKET_UPDATE(state, users) {
@@ -84,6 +97,23 @@ export default function() {
       cycle(context) {
         this._vm.$socket.client.emit('cycle');
       },
+
+      /* set up my video */
+      async initialize(context) {
+        const constraints = {
+          audio: false,
+          video: true,
+          aspectRatio: 1.7777,
+        };
+
+        console.log("initializing");
+        let stream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log("got video");
+        let id     = await context.state.my_id;
+        console.log("got connection");
+
+        context.commit('SET_TRACK', { id, track: stream.getTracks()[0]});
+      },
     },
   });
 
@@ -92,6 +122,8 @@ export default function() {
   // https://github.com/probil/vue-socket.io-extended/issues/384
   const socket = io('http://localhost:8080');
   Vue.use(VueSocketIoExt, socket, { store });
+
+  store.dispatch('initialize');
 
   return store;
 };
