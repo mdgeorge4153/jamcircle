@@ -1,0 +1,56 @@
+
+Setup
+-----
+
+Create offer:
+  - create RTCPeerConnection
+  - call createOffer: RTCSessionDescription
+  - setLocalDescription(offer)
+  - send offer to remote peer
+  - listen for offer receipt (signaling)
+
+Receive offer:
+  - wait for offer
+  - setRemoteDescription
+  - createAnswer
+  - send answer back
+
+Receive answer:
+  - setRemoteDescription(response)
+
+
+Ice establishment
+-----------------
+
+Ferry Ice candidates back and forth (both sides)
+ - onicecandidate: send candidate to other peer
+ - onreceivecandidate: addIceCandidate
+
+Connected
+---------
+
+ - onconnectionstatechange, if connectionState === 'connected'
+
+Ferrying media
+--------------
+
+ - addTrack / ontrack
+
+
+Messages
+--------
+
+Tail                Server                NewTail
+                            <-- ff --
+      -- offer -->
+                            --- offer  -->
+                            <-- answer ---
+      <-- answer --      
+
+
+      <-- ICE --->          <---- ICE --->
+
+      ------- tracks -------------------->
+
+
+

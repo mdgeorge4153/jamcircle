@@ -75,7 +75,6 @@ export default {
 
   watch: {
     track() {
-      console.log("track changed");
       this.stream.addTrack(this.track);
     },
   },

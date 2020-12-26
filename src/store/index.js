@@ -68,7 +68,6 @@ export default function() {
       },
 
       SET_TRACK(state, {id, track}) {
-        console.log("stream update", id, track);
         Vue.set(state.tracks, id, track);
       },
 
@@ -106,11 +105,8 @@ export default function() {
           aspectRatio: 1.7777,
         };
 
-        console.log("initializing");
         let stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log("got video");
         let id     = await context.state.my_id;
-        console.log("got connection");
 
         context.commit('SET_TRACK', { id, track: stream.getTracks()[0]});
       },
