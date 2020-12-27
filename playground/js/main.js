@@ -53,6 +53,7 @@ class VideoConnection {
       this.onAddIceCandidateSuccess();
     } catch (e) {
       this.onAddIceCandidateError(e);
+      throw e;
     }
     console.log(`${this.getName()} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
   }
@@ -82,6 +83,17 @@ class VideoSource extends VideoConnection {
 
   getName() {
     return 'pc1';
+  }
+
+  async createOffer(offerSuccess) {
+    try {
+      console.log('pc1 createOffer start');
+      const offer = await this.pc1.createOffer(offerOptions);
+      await offerSuccess(offer);
+    } catch (e) {
+      onCreateSessionDescriptionError(e);
+      throw e;
+    }
   }
 }
 
@@ -124,6 +136,7 @@ async function start() {
     callButton.disabled = false;
   } catch (e) {
     alert(`getUserMedia() error: ${e.name}`);
+    throw e;
   }
 }
 
@@ -160,13 +173,7 @@ async function call() {
   });
   console.log('Added local stream to pc1');
 
-  try {
-    console.log('pc1 createOffer start');
-    const offer = await source.pc1.createOffer(offerOptions);
-    await onCreateOfferSuccess(offer);
-  } catch (e) {
-    onCreateSessionDescriptionError(e);
-  }
+  source.createOffer(onCreateOfferSuccess);
 }
 
 function onCreateSessionDescriptionError(error) {
@@ -181,6 +188,7 @@ async function onCreateOfferSuccess(desc) {
     onSetLocalSuccess(source.pc1);
   } catch (e) {
     onSetSessionDescriptionError();
+    throw e;
   }
 
   console.log('pc2 setRemoteDescription start');
@@ -189,6 +197,7 @@ async function onCreateOfferSuccess(desc) {
     onSetRemoteSuccess(sink.pc2);
   } catch (e) {
     onSetSessionDescriptionError();
+    throw e;
   }
 
   console.log('pc2 createAnswer start');
@@ -200,6 +209,7 @@ async function onCreateOfferSuccess(desc) {
     await onCreateAnswerSuccess(answer);
   } catch (e) {
     onCreateSessionDescriptionError(e);
+    throw e;
   }
 }
 
@@ -230,6 +240,7 @@ async function onCreateAnswerSuccess(desc) {
     onSetLocalSuccess(sink.pc2);
   } catch (e) {
     onSetSessionDescriptionError(e);
+    throw e;
   }
   console.log('pc1 setRemoteDescription start');
   try {
@@ -237,6 +248,7 @@ async function onCreateAnswerSuccess(desc) {
     onSetRemoteSuccess(source.pc1);
   } catch (e) {
     onSetSessionDescriptionError(e);
+    throw e;
   }
 }
 
