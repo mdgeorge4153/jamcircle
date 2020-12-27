@@ -73,6 +73,21 @@ class VideoConnection {
     }
   }
 
+  onCreateSessionDescriptionError(error) {
+    console.log(`Failed to create session description: ${error.toString()}`);
+  }
+
+  onSetLocalSuccess() {
+    console.log(`${this.getName()} setLocalDescription complete`);
+  }
+
+  onSetRemoteSuccess() {
+    console.log(`${this.getName()} setRemoteDescription complete`);
+  }
+
+  onSetSessionDescriptionError(error) {
+    console.log(`Failed to set session description: ${error.toString()}`);
+  }
 }
 
 class VideoSource extends VideoConnection {
@@ -85,16 +100,23 @@ class VideoSource extends VideoConnection {
     return 'pc1';
   }
 
+  addTrack(track) {
+    console.log(track);
+    track.contentHint="hello hello";
+    this.pc1.addTrack(track, new MediaStream());
+  }
+
   async createOffer(offerSuccess) {
     try {
       console.log('pc1 createOffer start');
-      const offer = await this.pc1.createOffer(offerOptions);
-      await offerSuccess(offer);
+      const desc = await this.pc1.createOffer(offerOptions);
+      await offerSuccess(desc);
     } catch (e) {
-      onCreateSessionDescriptionError(e);
+      this.onCreateSessionDescriptionError(e);
       throw e;
     }
   }
+
 }
 
 class VideoSink extends VideoConnection {
@@ -166,18 +188,10 @@ async function call() {
   sink = new VideoSink(new RTCPeerConnection(configuration), addRemoteStream);
   console.log('Created remote peer connection object sink.pc2');
 
-  localStream.getTracks().forEach(function(track) {
-    console.log(track);
-    track.contentHint="hello hello";
-    source.pc1.addTrack(track, new MediaStream());
-  });
+  localStream.getTracks().forEach((track) => source.addTrack(track));
   console.log('Added local stream to pc1');
 
   source.createOffer(onCreateOfferSuccess);
-}
-
-function onCreateSessionDescriptionError(error) {
-  console.log(`Failed to create session description: ${error.toString()}`);
 }
 
 async function onCreateOfferSuccess(desc) {
@@ -185,18 +199,18 @@ async function onCreateOfferSuccess(desc) {
   console.log('pc1 setLocalDescription start');
   try {
     await source.pc1.setLocalDescription(desc);
-    onSetLocalSuccess(source.pc1);
+    source.onSetLocalSuccess();
   } catch (e) {
-    onSetSessionDescriptionError();
+    source.onSetSessionDescriptionError(e);
     throw e;
   }
 
   console.log('pc2 setRemoteDescription start');
   try {
     await sink.pc2.setRemoteDescription(desc);
-    onSetRemoteSuccess(sink.pc2);
+    sink.onSetRemoteSuccess();
   } catch (e) {
-    onSetSessionDescriptionError();
+    sink.onSetSessionDescriptionError(e);
     throw e;
   }
 
@@ -208,21 +222,9 @@ async function onCreateOfferSuccess(desc) {
     const answer = await sink.pc2.createAnswer();
     await onCreateAnswerSuccess(answer);
   } catch (e) {
-    onCreateSessionDescriptionError(e);
+    sink.onCreateSessionDescriptionError(e);
     throw e;
   }
-}
-
-function onSetLocalSuccess(pc) {
-  console.log(`${getName(pc)} setLocalDescription complete`);
-}
-
-function onSetRemoteSuccess(pc) {
-  console.log(`${getName(pc)} setRemoteDescription complete`);
-}
-
-function onSetSessionDescriptionError(error) {
-  console.log(`Failed to set session description: ${error.toString()}`);
 }
 
 function addRemoteStream(e) {
@@ -237,17 +239,17 @@ async function onCreateAnswerSuccess(desc) {
   console.log('pc2 setLocalDescription start');
   try {
     await sink.pc2.setLocalDescription(desc);
-    onSetLocalSuccess(sink.pc2);
+    sink.onSetLocalSuccess();
   } catch (e) {
-    onSetSessionDescriptionError(e);
+    sink.onSetSessionDescriptionError(e);
     throw e;
   }
   console.log('pc1 setRemoteDescription start');
   try {
     await source.pc1.setRemoteDescription(desc);
-    onSetRemoteSuccess(source.pc1);
+    source.onSetRemoteSuccess();
   } catch (e) {
-    onSetSessionDescriptionError(e);
+    source.onSetSessionDescriptionError(e);
     throw e;
   }
 }
