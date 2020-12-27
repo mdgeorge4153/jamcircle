@@ -106,7 +106,7 @@ class VideoSource extends VideoConnection {
     this.pc1.addTrack(track, new MediaStream());
   }
 
-  async createOffer(offerSuccess) {
+  async createOffer() {
     try {
       console.log('pc1 createOffer start');
       const desc = await this.pc1.createOffer(offerOptions);
@@ -120,7 +120,7 @@ class VideoSource extends VideoConnection {
         throw e;
       }
 
-      await offerSuccess(desc);
+      return desc;
     } catch (e) {
       this.onCreateSessionDescriptionError(e);
       throw e;
@@ -138,6 +138,29 @@ class VideoSink extends VideoConnection {
   
   getName() {
     return 'pc2';
+  }
+
+  async createAnswer(desc) {
+    console.log('pc2 setRemoteDescription start');
+    try {
+      await this.pc2.setRemoteDescription(desc);
+      this.onSetRemoteSuccess();
+    } catch (e) {
+      this.onSetSessionDescriptionError(e);
+      throw e;
+    }
+
+    console.log('pc2 createAnswer start');
+    // Since the 'remote' side has no media stream we need
+    // to pass in the right constraints in order for it to
+    // accept the incoming offer of audio and video.
+    try {
+      const answer = await this.pc2.createAnswer();
+      return answer;
+    } catch (e) {
+      this.onCreateSessionDescriptionError(e);
+      throw e;
+    }
   }
 }
 
@@ -201,31 +224,11 @@ async function call() {
   localStream.getTracks().forEach((track) => source.addTrack(track));
   console.log('Added local stream to pc1');
 
-  source.createOffer(onCreateOfferSuccess);
-}
+  const offer = await source.createOffer();
+  console.log(`Offer from pc1\n${offer.sdp}`);
 
-async function onCreateOfferSuccess(desc) {
-  console.log(`Offer from pc1\n${desc.sdp}`);
-  console.log('pc2 setRemoteDescription start');
-  try {
-    await sink.pc2.setRemoteDescription(desc);
-    sink.onSetRemoteSuccess();
-  } catch (e) {
-    sink.onSetSessionDescriptionError(e);
-    throw e;
-  }
-
-  console.log('pc2 createAnswer start');
-  // Since the 'remote' side has no media stream we need
-  // to pass in the right constraints in order for it to
-  // accept the incoming offer of audio and video.
-  try {
-    const answer = await sink.pc2.createAnswer();
-    await onCreateAnswerSuccess(answer);
-  } catch (e) {
-    sink.onCreateSessionDescriptionError(e);
-    throw e;
-  }
+  const answer = await sink.createAnswer(offer);
+  onCreateAnswerSuccess(answer);
 }
 
 function addRemoteStream(e) {
