@@ -40,15 +40,43 @@ remoteVideo.addEventListener('resize', () => {
   }
 });
 
-class VideoSource {
+class VideoConnection {
+  constructor(pc) {
+    this.pc = pc;
+    pc.addEventListener('icecandidate', e => this.onIceCandidate(e));
+  }
+
+  async onIceCandidate(event) {
+    try {
+      await (getOtherPc(this.pc).addIceCandidate(event.candidate));
+      onAddIceCandidateSuccess(this.pc);
+    } catch (e) {
+      onAddIceCandidateError(this.pc, e);
+    }
+    console.log(`${this.getName()} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
+  }
+
+}
+
+class VideoSource extends VideoConnection {
   constructor(pc1) {
+    super(pc1);
     this.pc1 = pc1;
+  }
+
+  getName() {
+    return 'pc1';
   }
 }
 
-class VideoSink {
+class VideoSink extends VideoConnection {
   constructor(pc2) {
+    super(pc2);
     this.pc2 = pc2;
+  }
+  
+  getName() {
+    return 'pc2';
   }
 }
 
@@ -105,10 +133,9 @@ async function call() {
   console.log('RTCPeerConnection configuration:', configuration);
   source = new VideoSource(new RTCPeerConnection(configuration));
   console.log('Created local peer connection object pc1');
-  source.pc1.addEventListener('icecandidate', e => onIceCandidate(source.pc1, e));
   sink = new VideoSink(new RTCPeerConnection(configuration));
   console.log('Created remote peer connection object sink.pc2');
-  sink.pc2.addEventListener('icecandidate', e => onIceCandidate(sink.pc2, e));
+
   source.pc1.addEventListener('iceconnectionstatechange', e => onIceStateChange(source.pc1, e));
   sink.pc2.addEventListener('iceconnectionstatechange', e => onIceStateChange(sink.pc2, e));
   sink.pc2.addEventListener('track', gotRemoteStream);
@@ -198,16 +225,6 @@ async function onCreateAnswerSuccess(desc) {
   } catch (e) {
     onSetSessionDescriptionError(e);
   }
-}
-
-async function onIceCandidate(pc, event) {
-  try {
-    await (getOtherPc(pc).addIceCandidate(event.candidate));
-    onAddIceCandidateSuccess(pc);
-  } catch (e) {
-    onAddIceCandidateError(pc, e);
-  }
-  console.log(`${getName(pc)} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
 }
 
 function onAddIceCandidateSuccess(pc) {
