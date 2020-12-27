@@ -46,9 +46,15 @@ class VideoSource {
   }
 }
 
+class VideoSink {
+  constructor(pc2) {
+    this.pc2 = pc2;
+  }
+}
+
 let localStream;
 let source;
-let pc2;
+let sink;
 const offerOptions = {
   offerToReceiveAudio: 1,
   offerToReceiveVideo: 1
@@ -59,7 +65,7 @@ function getName(pc) {
 }
 
 function getOtherPc(pc) {
-  return (pc === source.pc1) ? pc2 : source.pc1;
+  return (pc === source.pc1) ? sink.pc2 : source.pc1;
 }
 
 async function start() {
@@ -100,12 +106,12 @@ async function call() {
   source = new VideoSource(new RTCPeerConnection(configuration));
   console.log('Created local peer connection object pc1');
   source.pc1.addEventListener('icecandidate', e => onIceCandidate(source.pc1, e));
-  pc2 = new RTCPeerConnection(configuration);
-  console.log('Created remote peer connection object pc2');
-  pc2.addEventListener('icecandidate', e => onIceCandidate(pc2, e));
+  sink = new VideoSink(new RTCPeerConnection(configuration));
+  console.log('Created remote peer connection object sink.pc2');
+  sink.pc2.addEventListener('icecandidate', e => onIceCandidate(sink.pc2, e));
   source.pc1.addEventListener('iceconnectionstatechange', e => onIceStateChange(source.pc1, e));
-  pc2.addEventListener('iceconnectionstatechange', e => onIceStateChange(pc2, e));
-  pc2.addEventListener('track', gotRemoteStream);
+  sink.pc2.addEventListener('iceconnectionstatechange', e => onIceStateChange(sink.pc2, e));
+  sink.pc2.addEventListener('track', gotRemoteStream);
 
   localStream.getTracks().forEach(function(track) {
     console.log(track);
@@ -139,8 +145,8 @@ async function onCreateOfferSuccess(desc) {
 
   console.log('pc2 setRemoteDescription start');
   try {
-    await pc2.setRemoteDescription(desc);
-    onSetRemoteSuccess(pc2);
+    await sink.pc2.setRemoteDescription(desc);
+    onSetRemoteSuccess(sink.pc2);
   } catch (e) {
     onSetSessionDescriptionError();
   }
@@ -150,7 +156,7 @@ async function onCreateOfferSuccess(desc) {
   // to pass in the right constraints in order for it to
   // accept the incoming offer of audio and video.
   try {
-    const answer = await pc2.createAnswer();
+    const answer = await sink.pc2.createAnswer();
     await onCreateAnswerSuccess(answer);
   } catch (e) {
     onCreateSessionDescriptionError(e);
@@ -180,8 +186,8 @@ async function onCreateAnswerSuccess(desc) {
   console.log(`Answer from pc2:\n${desc.sdp}`);
   console.log('pc2 setLocalDescription start');
   try {
-    await pc2.setLocalDescription(desc);
-    onSetLocalSuccess(pc2);
+    await sink.pc2.setLocalDescription(desc);
+    onSetLocalSuccess(sink.pc2);
   } catch (e) {
     onSetSessionDescriptionError(e);
   }
@@ -222,9 +228,9 @@ function onIceStateChange(pc, event) {
 function hangup() {
   console.log('Ending call');
   source.pc1.close();
-  pc2.close();
+  sink.pc2.close();
   source.pc1 = null;
-  pc2 = null;
+  sink.pc2 = null;
   hangupButton.disabled = true;
   callButton.disabled = false;
 }
