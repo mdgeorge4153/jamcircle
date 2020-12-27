@@ -44,16 +44,32 @@ class VideoConnection {
   constructor(pc) {
     this.pc = pc;
     pc.addEventListener('icecandidate', e => this.onIceCandidate(e));
+    pc.addEventListener('iceconnectionstatechange', e => this.onIceStateChange(e));
   }
 
   async onIceCandidate(event) {
     try {
       await (getOtherPc(this.pc).addIceCandidate(event.candidate));
-      onAddIceCandidateSuccess(this.pc);
+      this.onAddIceCandidateSuccess();
     } catch (e) {
-      onAddIceCandidateError(this.pc, e);
+      this.onAddIceCandidateError(e);
     }
     console.log(`${this.getName()} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
+  }
+
+  onAddIceCandidateSuccess() {
+    console.log(`${this.getName()} addIceCandidate success`);
+  }
+
+  onAddIceCandidateError(pc, error) {
+    console.log(`${this.getName()} failed to add ICE Candidate: ${error.toString()}`);
+  }
+
+  onIceStateChange(event) {
+    if (this.pc) {
+      console.log(`${this.getName()} ICE state: ${this.pc.iceConnectionState}`);
+      console.log('ICE state change event: ', event);
+    }
   }
 
 }
@@ -70,9 +86,10 @@ class VideoSource extends VideoConnection {
 }
 
 class VideoSink extends VideoConnection {
-  constructor(pc2) {
+  constructor(pc2, gotRemoteStream) {
     super(pc2);
     this.pc2 = pc2;
+    this.pc2.addEventListener('track', gotRemoteStream);
   }
   
   getName() {
@@ -133,12 +150,8 @@ async function call() {
   console.log('RTCPeerConnection configuration:', configuration);
   source = new VideoSource(new RTCPeerConnection(configuration));
   console.log('Created local peer connection object pc1');
-  sink = new VideoSink(new RTCPeerConnection(configuration));
+  sink = new VideoSink(new RTCPeerConnection(configuration), addRemoteStream);
   console.log('Created remote peer connection object sink.pc2');
-
-  source.pc1.addEventListener('iceconnectionstatechange', e => onIceStateChange(source.pc1, e));
-  sink.pc2.addEventListener('iceconnectionstatechange', e => onIceStateChange(sink.pc2, e));
-  sink.pc2.addEventListener('track', gotRemoteStream);
 
   localStream.getTracks().forEach(function(track) {
     console.log(track);
@@ -202,7 +215,7 @@ function onSetSessionDescriptionError(error) {
   console.log(`Failed to set session description: ${error.toString()}`);
 }
 
-function gotRemoteStream(e) {
+function addRemoteStream(e) {
   if (remoteVideo.srcObject !== e.streams[0]) {
     remoteVideo.srcObject = e.streams[0];
     console.log('pc2 received remote stream');
@@ -224,21 +237,6 @@ async function onCreateAnswerSuccess(desc) {
     onSetRemoteSuccess(source.pc1);
   } catch (e) {
     onSetSessionDescriptionError(e);
-  }
-}
-
-function onAddIceCandidateSuccess(pc) {
-  console.log(`${getName(pc)} addIceCandidate success`);
-}
-
-function onAddIceCandidateError(pc, error) {
-  console.log(`${getName(pc)} failed to add ICE Candidate: ${error.toString()}`);
-}
-
-function onIceStateChange(pc, event) {
-  if (pc) {
-    console.log(`${getName(pc)} ICE state: ${pc.iceConnectionState}`);
-    console.log('ICE state change event: ', event);
   }
 }
 
