@@ -3,6 +3,8 @@ import Vuex from 'vuex';
 import VueSocketIoExt from 'vue-socket.io-extended';
 import io   from 'socket.io-client';
 
+import rtc from './rtc';
+
 Vue.use(Vuex);
 
 /* user fields:
@@ -21,16 +23,19 @@ export default function() {
   let my_id = new Promise((resolve, reject) => resolve_connected = resolve);
 
   const store = new Vuex.Store({
+    modules: {
+      rtc,
+    },
+
     state: {
       users:  [],
       status: {},
-      tracks: {},
 
-      username: '',
-      icon:     'fas fa-microphone-alt',
-      playing:  'solo',
-
-      my_id: my_id,
+      username:   '',
+      icon:       'fas fa-microphone-alt',
+      playing:    'solo',
+      id_promise: my_id, // use this for actions that may occur before connection
+      id:         null,
 
       icons: [
         { name: 'Other',  icon: 'fas fa-microphone-alt' },
@@ -43,10 +48,15 @@ export default function() {
 
     getters: {
       status: (state) => (id) => state.status[id],
-      track:  (state) => (id) => state.tracks[id],
     },
 
     mutations: {
+
+      /** Update my metadata **************************************************/
+
+      // TODO: (maybe) move the communication for these into actions
+      // TODO: consolidate these into UPDATE_METADATA
+
       CHANGE_NAME(state, username) {
         state.username = username;
         this._vm.$socket.client.emit('update', { username });
@@ -62,17 +72,18 @@ export default function() {
         this._vm.$socket.client.emit('update', { playing });
       },
 
+      /** Connection establishment ********************************************/
+
       SOCKET_CONNECT(state) {
-        resolve_connected(this._vm.$socket.client.id);
+        state.id = this._vm.$socket.client.id;
+        resolve_connected(state.id);
         this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
       },
 
-      SET_TRACK(state, {id, track}) {
-        Vue.set(state.tracks, id, track);
-      },
-
-      SOCKET_UPDATE(state, users) {
+      SET_USERS(state, users) {
         state.users = users;
+
+        // update past/present/future status
         let status  = 'past';
         let me      = this._vm.$socket.client.id;
         for (let {id} of users) {
@@ -89,7 +100,7 @@ export default function() {
     actions: {
       /* moves this player to the tail */
       fastForward(context) {
-        // TODO
+        this._vm.$socket.client.emit('fast forward');
       },
 
       /* causes the head player to fastForward */
@@ -97,18 +108,9 @@ export default function() {
         this._vm.$socket.client.emit('cycle');
       },
 
-      /* set up my video */
-      async initialize(context) {
-        const constraints = {
-          audio: false,
-          video: true,
-          aspectRatio: 1.7777,
-        };
-
-        let stream = await navigator.mediaDevices.getUserMedia(constraints);
-        let id     = await context.state.my_id;
-
-        context.commit('SET_TRACK', { id, track: stream.getTracks()[0]});
+      /* receive metadata updates from server */
+      socket_update(context, users) {
+        context.commit('SET_USERS', users);
       },
     },
   });

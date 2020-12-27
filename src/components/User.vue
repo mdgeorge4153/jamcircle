@@ -59,9 +59,20 @@ export default {
   data() {
     return { stream: new MediaStream() };
   },
+
   mounted() {
     this.$refs.video.srcObject = this.stream;
-    this.stream.addTrack(this.track);
+  },
+
+  watch: {
+    track: {
+      immediate: true,
+      handler() {
+        this.stream.getTracks().forEach(this.stream.removeTrack);
+        if (this.status != 'future' && this.track != null)
+          this.stream.addTrack(this.track);
+      },
+    },
   },
 
   computed: {
@@ -72,13 +83,6 @@ export default {
       return this.$store.getters.track(this.id);
     },
   },
-
-  watch: {
-    track() {
-      this.stream.addTrack(this.track);
-    },
-  },
-
 }
 </script>
 
