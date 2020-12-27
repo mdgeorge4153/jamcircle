@@ -110,6 +110,16 @@ class VideoSource extends VideoConnection {
     try {
       console.log('pc1 createOffer start');
       const desc = await this.pc1.createOffer(offerOptions);
+
+      console.log('pc1 setLocalDescription start');
+      try {
+        await this.pc1.setLocalDescription(desc);
+        this.onSetLocalSuccess();
+      } catch (e) {
+        this.onSetSessionDescriptionError(e);
+        throw e;
+      }
+
       await offerSuccess(desc);
     } catch (e) {
       this.onCreateSessionDescriptionError(e);
@@ -196,15 +206,6 @@ async function call() {
 
 async function onCreateOfferSuccess(desc) {
   console.log(`Offer from pc1\n${desc.sdp}`);
-  console.log('pc1 setLocalDescription start');
-  try {
-    await source.pc1.setLocalDescription(desc);
-    source.onSetLocalSuccess();
-  } catch (e) {
-    source.onSetSessionDescriptionError(e);
-    throw e;
-  }
-
   console.log('pc2 setRemoteDescription start');
   try {
     await sink.pc2.setRemoteDescription(desc);
