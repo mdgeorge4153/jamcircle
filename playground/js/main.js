@@ -40,8 +40,14 @@ remoteVideo.addEventListener('resize', () => {
   }
 });
 
+class VideoSource {
+  constructor(pc1) {
+    this.pc1 = pc1;
+  }
+}
+
 let localStream;
-let pc1;
+let source;
 let pc2;
 const offerOptions = {
   offerToReceiveAudio: 1,
@@ -49,11 +55,11 @@ const offerOptions = {
 };
 
 function getName(pc) {
-  return (pc === pc1) ? 'pc1' : 'pc2';
+  return (pc === source.pc1) ? 'pc1' : 'pc2';
 }
 
 function getOtherPc(pc) {
-  return (pc === pc1) ? pc2 : pc1;
+  return (pc === source.pc1) ? pc2 : source.pc1;
 }
 
 async function start() {
@@ -91,26 +97,26 @@ async function call() {
   }
   const configuration = getSelectedSdpSemantics();
   console.log('RTCPeerConnection configuration:', configuration);
-  pc1 = new RTCPeerConnection(configuration);
+  source = new VideoSource(new RTCPeerConnection(configuration));
   console.log('Created local peer connection object pc1');
-  pc1.addEventListener('icecandidate', e => onIceCandidate(pc1, e));
+  source.pc1.addEventListener('icecandidate', e => onIceCandidate(source.pc1, e));
   pc2 = new RTCPeerConnection(configuration);
   console.log('Created remote peer connection object pc2');
   pc2.addEventListener('icecandidate', e => onIceCandidate(pc2, e));
-  pc1.addEventListener('iceconnectionstatechange', e => onIceStateChange(pc1, e));
+  source.pc1.addEventListener('iceconnectionstatechange', e => onIceStateChange(source.pc1, e));
   pc2.addEventListener('iceconnectionstatechange', e => onIceStateChange(pc2, e));
   pc2.addEventListener('track', gotRemoteStream);
 
   localStream.getTracks().forEach(function(track) {
     console.log(track);
     track.contentHint="hello hello";
-    pc1.addTrack(track, new MediaStream());
+    source.pc1.addTrack(track, new MediaStream());
   });
   console.log('Added local stream to pc1');
 
   try {
     console.log('pc1 createOffer start');
-    const offer = await pc1.createOffer(offerOptions);
+    const offer = await source.pc1.createOffer(offerOptions);
     await onCreateOfferSuccess(offer);
   } catch (e) {
     onCreateSessionDescriptionError(e);
@@ -125,8 +131,8 @@ async function onCreateOfferSuccess(desc) {
   console.log(`Offer from pc1\n${desc.sdp}`);
   console.log('pc1 setLocalDescription start');
   try {
-    await pc1.setLocalDescription(desc);
-    onSetLocalSuccess(pc1);
+    await source.pc1.setLocalDescription(desc);
+    onSetLocalSuccess(source.pc1);
   } catch (e) {
     onSetSessionDescriptionError();
   }
@@ -181,8 +187,8 @@ async function onCreateAnswerSuccess(desc) {
   }
   console.log('pc1 setRemoteDescription start');
   try {
-    await pc1.setRemoteDescription(desc);
-    onSetRemoteSuccess(pc1);
+    await source.pc1.setRemoteDescription(desc);
+    onSetRemoteSuccess(source.pc1);
   } catch (e) {
     onSetSessionDescriptionError(e);
   }
@@ -215,9 +221,9 @@ function onIceStateChange(pc, event) {
 
 function hangup() {
   console.log('Ending call');
-  pc1.close();
+  source.pc1.close();
   pc2.close();
-  pc1 = null;
+  source.pc1 = null;
   pc2 = null;
   hangupButton.disabled = true;
   callButton.disabled = false;
