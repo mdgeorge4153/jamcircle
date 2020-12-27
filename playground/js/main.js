@@ -58,6 +58,11 @@ class VideoConnection {
     console.log(`${this.getName()} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
   }
 
+  close() {
+    this.pc.close();
+    this.pc = null;
+  }
+
   onAddIceCandidateSuccess() {
     console.log(`${this.getName()} addIceCandidate success`);
   }
@@ -127,6 +132,16 @@ class VideoSource extends VideoConnection {
     }
   }
 
+  async setAnswer(answer) {
+    console.log('pc1 setRemoteDescription start');
+    try {
+      await this.pc1.setRemoteDescription(answer);
+      this.onSetRemoteSuccess();
+    } catch (e) {
+      this.onSetSessionDescriptionError(e);
+      throw e;
+    }
+  }
 }
 
 class VideoSink extends VideoConnection {
@@ -156,6 +171,17 @@ class VideoSink extends VideoConnection {
     // accept the incoming offer of audio and video.
     try {
       const answer = await this.pc2.createAnswer();
+
+      console.log('pc2 setLocalDescription start');
+      try {
+        await sink.pc2.setLocalDescription(answer);
+        sink.onSetLocalSuccess();
+        return answer;
+      } catch (e) {
+        sink.onSetSessionDescriptionError(e);
+        throw e;
+      }
+
       return answer;
     } catch (e) {
       this.onCreateSessionDescriptionError(e);
@@ -228,7 +254,9 @@ async function call() {
   console.log(`Offer from pc1\n${offer.sdp}`);
 
   const answer = await sink.createAnswer(offer);
-  onCreateAnswerSuccess(answer);
+  console.log(`Answer from pc2:\n${answer.sdp}`);
+
+  await source.setAnswer(answer);
 }
 
 function addRemoteStream(e) {
@@ -238,32 +266,10 @@ function addRemoteStream(e) {
   }
 }
 
-async function onCreateAnswerSuccess(desc) {
-  console.log(`Answer from pc2:\n${desc.sdp}`);
-  console.log('pc2 setLocalDescription start');
-  try {
-    await sink.pc2.setLocalDescription(desc);
-    sink.onSetLocalSuccess();
-  } catch (e) {
-    sink.onSetSessionDescriptionError(e);
-    throw e;
-  }
-  console.log('pc1 setRemoteDescription start');
-  try {
-    await source.pc1.setRemoteDescription(desc);
-    source.onSetRemoteSuccess();
-  } catch (e) {
-    source.onSetSessionDescriptionError(e);
-    throw e;
-  }
-}
-
 function hangup() {
   console.log('Ending call');
-  source.pc1.close();
-  sink.pc2.close();
-  source.pc1 = null;
-  sink.pc2 = null;
+  source.close();
+  sink.close();
   hangupButton.disabled = true;
   callButton.disabled = false;
 }
