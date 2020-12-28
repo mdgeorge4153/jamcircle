@@ -18,16 +18,16 @@
  */
 
 let default_configuration = {
-  log: console.log,
+  log: (msg) => msg,
 }
 
 class VideoConnection {
-  constructor(configuration, send) {
+  constructor(configuration, send_signal) {
     this.pc = new RTCPeerConnection(configuration);
     this.pc.addEventListener('icecandidate', e => this._onIceCandidate(e));
     this.pc.addEventListener('iceconnectionstatechange', e => this._onIceStateChange(e));
-    this.log      = console.log;
-    this.send     = send;
+    this.log      = (msg) => msg;
+    this.send_signal = send_signal;
     this.can_send = false;
 
     this.name = configuration.name;
@@ -57,7 +57,7 @@ class VideoConnection {
 
   async _onIceCandidate(event) {
     try {
-      await this.send({candidate: event.candidate});
+      await this.send_signal({candidate: event.candidate});
       this.log(`${this.name} addIceCandidate success`);
     } catch (e) {
       this.log(`${this.name} failed to add ICE Candidate: ${e.toString()}`);
@@ -75,8 +75,8 @@ class VideoConnection {
 }
 
 class VideoSource extends VideoConnection {
-  constructor(config, send, tracks) {
-    super({name: 'source', ...config}, send);
+  constructor(config, send_signal, tracks) {
+    super({name: 'source', ...config}, send_signal);
     tracks.forEach((track) => this.addTrack(track));
   }
 
@@ -127,9 +127,15 @@ class VideoSource extends VideoConnection {
 }
 
 class VideoSink extends VideoConnection {
-  constructor(config, send, gotRemoteStream) {
-    super({name: 'sink', ...config}, send);
-    this.pc.addEventListener('track', gotRemoteStream);
+  constructor(config, send_signal, gotRemoteTrack) {
+    super({name: 'sink', ...config}, send_signal);
+    this.pc.addEventListener('track', (e) => this._gotRemoteStream(e));
+    this.gotRemoteTrack = gotRemoteTrack;
+  }
+
+  _gotRemoteStream(e) {
+    for (let track of e.streams[0].getTracks())
+      this.gotRemoteTrack(track);
   }
 
   async createAnswer(desc) {
@@ -153,7 +159,7 @@ class VideoSink extends VideoConnection {
       try {
         await this.pc.setLocalDescription(answer);
         this.log(`${this.name} setLocalDescription complete`);
-        return answer;
+        this.send_signal({answer});
       } catch (e) {
         this.log(`Failed to set session description: ${e.toString()}`);
         throw e;

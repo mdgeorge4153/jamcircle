@@ -94,21 +94,18 @@ async function call() {
   sink = new VideoSink(
     configuration,                  // config
     (msg) => source.recv_signal(msg), // send
-    addRemoteStream                 // callback
+    addRemoteTrack                  // callback
   );
-  console.log('Created remote peer connection object sink.pc2');
+  console.log('Created remote peer connection object pc2');
+
+  remoteVideo.srcObject = new MediaStream();
 
   const offer  = await source.createOffer();
   const answer = await sink.createAnswer(offer);
-
-  source.setAnswer(answer);
 }
 
-function addRemoteStream(e) {
-  if (remoteVideo.srcObject !== e.streams[0]) {
-    remoteVideo.srcObject = e.streams[0];
-    console.log('pc2 received remote stream');
-  }
+function addRemoteTrack(track) {
+  remoteVideo.srcObject.addTrack(track);
 }
 
 function hangup() {
