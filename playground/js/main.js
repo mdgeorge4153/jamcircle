@@ -41,31 +41,40 @@ remoteVideo.addEventListener('resize', () => {
 });
 
 class VideoConnection {
-  constructor(configuration) {
+  constructor(configuration, send) {
     this.pc = new RTCPeerConnection(configuration);
     this.pc.addEventListener('icecandidate', e => this.onIceCandidate(e));
     this.pc.addEventListener('iceconnectionstatechange', e => this.onIceStateChange(e));
+    this.log = console.log;
+    this.send = send;
+  }
+
+  onMessage(msg) {
+    if (msg.candidate)
+      return this.addIceCandidate(msg.candidate);
+    else
+      this.log('unexpected message: ', msg);
   }
 
   async addIceCandidate(candidate) {
     try {
       await this.pc.addIceCandidate(candidate);
-      this.onAddIceCandidateSuccess();
+      this.log(`${this.getName()} addIceCandidate success`);
     } catch (e) {
-      this.onAddIceCandidateError(e);
+      this.log(`${this.getName()} failed to add ICE Candidate: ${e.toString()}`);
       throw e;
     }
   }
 
   async onIceCandidate(event) {
     try {
-      await (getOtherPc(this.pc).addIceCandidate(event.candidate));
-      this.onAddIceCandidateSuccess();
+      await this.send({candidate: event.candidate});
+      this.log(`${this.getName()} addIceCandidate success`);
     } catch (e) {
-      this.onAddIceCandidateError(e);
+      this.log(`${this.getName()} failed to add ICE Candidate: ${e.toString()}`);
       throw e;
     }
-    console.log(`${this.getName()} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
+    this.log(`${this.getName()} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
   }
 
   close() {
@@ -73,42 +82,26 @@ class VideoConnection {
     this.pc = null;
   }
 
-  onAddIceCandidateSuccess() {
-    console.log(`${this.getName()} addIceCandidate success`);
-  }
-
-  onAddIceCandidateError(pc, error) {
-    console.log(`${this.getName()} failed to add ICE Candidate: ${error.toString()}`);
-  }
-
   onIceStateChange(event) {
     if (this.pc) {
-      console.log(`${this.getName()} ICE state: ${this.pc.iceConnectionState}`);
-      console.log('ICE state change event: ', event);
+      this.log(`${this.getName()} ICE state: ${this.pc.iceConnectionState}`);
+      this.log('ICE state change event: ', event);
     }
-  }
-
-  onCreateSessionDescriptionError(error) {
-    console.log(`Failed to create session description: ${error.toString()}`);
-  }
-
-  onSetLocalSuccess() {
-    console.log(`${this.getName()} setLocalDescription complete`);
-  }
-
-  onSetRemoteSuccess() {
-    console.log(`${this.getName()} setRemoteDescription complete`);
-  }
-
-  onSetSessionDescriptionError(error) {
-    console.log(`Failed to set session description: ${error.toString()}`);
   }
 }
 
 class VideoSource extends VideoConnection {
-  constructor(config) {
-    super(config);
+  constructor(config, send, tracks) {
+    super(config, send);
     this.pc1 = this.pc;
+    tracks.forEach((track) => this.addTrack(track));
+  }
+
+  onMessage(msg) {
+    if (msg.answer)
+      return this.setAnswer(msg.answer);
+    else
+      return super.onMessage(msg);
   }
 
   getName() {
@@ -116,47 +109,47 @@ class VideoSource extends VideoConnection {
   }
 
   addTrack(track) {
-    console.log(track);
+    this.log(track);
     track.contentHint="hello hello";
     this.pc1.addTrack(track, new MediaStream());
   }
 
   async createOffer() {
     try {
-      console.log('pc1 createOffer start');
+      this.log('pc1 createOffer start');
       const desc = await this.pc1.createOffer(offerOptions);
 
-      console.log('pc1 setLocalDescription start');
+      this.log('pc1 setLocalDescription start');
       try {
         await this.pc1.setLocalDescription(desc);
-        this.onSetLocalSuccess();
+        this.log(`${this.getName()} setLocalDescription complete`);
       } catch (e) {
-        this.onSetSessionDescriptionError(e);
+        this.log(`Failed to set session description: ${e.toString()}`);
         throw e;
       }
 
       return desc;
     } catch (e) {
-      this.onCreateSessionDescriptionError(e);
+      this.log(`Failed to create session description: ${e.toString()}`);
       throw e;
     }
   }
 
   async setAnswer(answer) {
-    console.log('pc1 setRemoteDescription start');
+    this.log('pc1 setRemoteDescription start');
     try {
       await this.pc1.setRemoteDescription(answer);
-      this.onSetRemoteSuccess();
+      this.log(`${this.getName()} setRemoteDescription complete`);
     } catch (e) {
-      this.onSetSessionDescriptionError(e);
+      this.log(`Failed to set session description: ${e.toString()}`);
       throw e;
     }
   }
 }
 
 class VideoSink extends VideoConnection {
-  constructor(config, gotRemoteStream) {
-    super(config);
+  constructor(config, send, gotRemoteStream) {
+    super(config, send);
     this.pc2 = this.pc;
     this.pc2.addEventListener('track', gotRemoteStream);
   }
@@ -166,35 +159,35 @@ class VideoSink extends VideoConnection {
   }
 
   async createAnswer(desc) {
-    console.log('pc2 setRemoteDescription start');
+    this.log('pc2 setRemoteDescription start');
     try {
       await this.pc2.setRemoteDescription(desc);
-      this.onSetRemoteSuccess();
+      this.log(`${this.getName()} setRemoteDescription complete`);
     } catch (e) {
-      this.onSetSessionDescriptionError(e);
+      this.log(`Failed to set session description: ${e.toString()}`);
       throw e;
     }
 
-    console.log('pc2 createAnswer start');
+    this.log('pc2 createAnswer start');
     // Since the 'remote' side has no media stream we need
     // to pass in the right constraints in order for it to
     // accept the incoming offer of audio and video.
     try {
       const answer = await this.pc2.createAnswer();
 
-      console.log('pc2 setLocalDescription start');
+      this.log('pc2 setLocalDescription start');
       try {
         await sink.pc2.setLocalDescription(answer);
-        sink.onSetLocalSuccess();
+        this.log(`${this.getName()} setLocalDescription complete`);
         return answer;
       } catch (e) {
-        sink.onSetSessionDescriptionError(e);
+        this.log(`Failed to set session description: ${e.toString()}`);
         throw e;
       }
 
       return answer;
     } catch (e) {
-      this.onCreateSessionDescriptionError(e);
+      this.log(`Failed to create session description: ${e.toString()}`);
       throw e;
     }
   }
@@ -207,10 +200,6 @@ const offerOptions = {
   offerToReceiveAudio: 1,
   offerToReceiveVideo: 1
 };
-
-function getOtherPc(pc) {
-  return (pc === source.pc1) ? sink.pc2 : source.pc1;
-}
 
 async function start() {
   console.log('Requesting local stream');
@@ -248,21 +237,24 @@ async function call() {
   }
   const configuration = getSelectedSdpSemantics();
   console.log('RTCPeerConnection configuration:', configuration);
-  source = new VideoSource(configuration);
+  source = new VideoSource(
+    configuration,                // config
+    (msg) => sink.onMessage(msg), // send
+    localStream.getTracks()       // tracks
+  );
+
   console.log('Created local peer connection object pc1');
-  sink = new VideoSink(configuration, addRemoteStream);
+  sink = new VideoSink(
+    configuration,                  // config
+    (msg) => source.onMessage(msg), // send
+    addRemoteStream                 // callback
+  );
   console.log('Created remote peer connection object sink.pc2');
 
-  localStream.getTracks().forEach((track) => source.addTrack(track));
-  console.log('Added local stream to pc1');
-
-  const offer = await source.createOffer();
-  console.log(`Offer from pc1\n${offer.sdp}`);
-
+  const offer  = await source.createOffer();
   const answer = await sink.createAnswer(offer);
-  console.log(`Answer from pc2:\n${answer.sdp}`);
 
-  await source.setAnswer(answer);
+  source.setAnswer(answer);
 }
 
 function addRemoteStream(e) {
