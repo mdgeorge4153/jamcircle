@@ -41,10 +41,20 @@ remoteVideo.addEventListener('resize', () => {
 });
 
 class VideoConnection {
-  constructor(pc) {
-    this.pc = pc;
-    pc.addEventListener('icecandidate', e => this.onIceCandidate(e));
-    pc.addEventListener('iceconnectionstatechange', e => this.onIceStateChange(e));
+  constructor(configuration) {
+    this.pc = new RTCPeerConnection(configuration);
+    this.pc.addEventListener('icecandidate', e => this.onIceCandidate(e));
+    this.pc.addEventListener('iceconnectionstatechange', e => this.onIceStateChange(e));
+  }
+
+  async addIceCandidate(candidate) {
+    try {
+      await this.pc.addIceCandidate(candidate);
+      this.onAddIceCandidateSuccess();
+    } catch (e) {
+      this.onAddIceCandidateError(e);
+      throw e;
+    }
   }
 
   async onIceCandidate(event) {
@@ -96,9 +106,9 @@ class VideoConnection {
 }
 
 class VideoSource extends VideoConnection {
-  constructor(pc1) {
-    super(pc1);
-    this.pc1 = pc1;
+  constructor(config) {
+    super(config);
+    this.pc1 = this.pc;
   }
 
   getName() {
@@ -145,9 +155,9 @@ class VideoSource extends VideoConnection {
 }
 
 class VideoSink extends VideoConnection {
-  constructor(pc2, gotRemoteStream) {
-    super(pc2);
-    this.pc2 = pc2;
+  constructor(config, gotRemoteStream) {
+    super(config);
+    this.pc2 = this.pc;
     this.pc2.addEventListener('track', gotRemoteStream);
   }
   
@@ -198,10 +208,6 @@ const offerOptions = {
   offerToReceiveVideo: 1
 };
 
-function getName(pc) {
-  return (pc === source.pc1) ? 'pc1' : 'pc2';
-}
-
 function getOtherPc(pc) {
   return (pc === source.pc1) ? sink.pc2 : source.pc1;
 }
@@ -242,9 +248,9 @@ async function call() {
   }
   const configuration = getSelectedSdpSemantics();
   console.log('RTCPeerConnection configuration:', configuration);
-  source = new VideoSource(new RTCPeerConnection(configuration));
+  source = new VideoSource(configuration);
   console.log('Created local peer connection object pc1');
-  sink = new VideoSink(new RTCPeerConnection(configuration), addRemoteStream);
+  sink = new VideoSink(configuration, addRemoteStream);
   console.log('Created remote peer connection object sink.pc2');
 
   localStream.getTracks().forEach((track) => source.addTrack(track));
