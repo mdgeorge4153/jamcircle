@@ -60,6 +60,7 @@ class VideoConnection {
     this.log      = (msg) => msg;
     this.send_signal = send_signal;
     this.can_send = false;
+    this.queue    = [];
 
     this.name = configuration.name;
   }
@@ -76,6 +77,16 @@ class VideoConnection {
     this.pc = null;
   }
 
+  _start_sending() {
+    if (this.can_send)
+      return;
+
+    this.can_send = true;
+    for (let msg of this.queue)
+      this.send_signal(msg);
+    this.queue = null;
+  }
+
   async _addIceCandidate(candidate) {
     // TODO: buffer messages until can_send
     try {
@@ -88,12 +99,18 @@ class VideoConnection {
   }
 
   async _onIceCandidate(event) {
-    try {
-      await this.send_signal({candidate: event.candidate});
-      this.log(`${this.name} addIceCandidate success`);
-    } catch (e) {
-      this.log(`${this.name} failed to add ICE Candidate: ${e.toString()}`);
-      throw e;
+    let message = {candidate: event.candidate};
+
+    if (this.can_send) {
+      try {
+        await this.send_signal(message);
+        this.log(`${this.name} addIceCandidate success`);
+      } catch (e) {
+        this.log(`${this.name} failed to add ICE Candidate: ${e.toString()}`);
+        throw e;
+      }
+    } else {
+      this.queue.push(message);
     }
     this.log(`${this.name} ICE candidate:\n${event.candidate ? event.candidate.candidate : '(null)'}`);
   }
@@ -113,6 +130,7 @@ class VideoSource extends VideoConnection {
   }
 
   recv_signal(msg) {
+    this._start_sending();
     if (msg.answer)
       return this._setAnswer(msg.answer);
     else
@@ -165,6 +183,7 @@ class VideoSink extends VideoConnection {
   constructor(send_signal, config) {
     super({name: 'sink', ...config}, send_signal);
     this.ids = null;
+    this._start_sending();
   }
 
   async getTracks({offer: desc, ids}) {

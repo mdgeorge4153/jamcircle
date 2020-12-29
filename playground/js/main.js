@@ -85,21 +85,21 @@ async function call() {
   const configuration = getSelectedSdpSemantics();
   console.log('RTCPeerConnection configuration:', configuration);
   source = new VideoSource(
-    {'camera': localStream}         // streams
+    {'camera': localStream},        // streams
     (msg) => sink.recv_signal(msg), // send_signal
-    configuration,                  // config
+    configuration                   // config
   );
+  const offer   = await source.createOffer();
 
   console.log('Created local peer connection object pc1');
   sink = new VideoSink(
     (msg) => source.recv_signal(msg), // send_signal
-    configuration,                    // config
+    configuration                     // config
   );
   console.log('Created remote peer connection object pc2');
 
   remoteVideo.srcObject = new MediaStream();
 
-  const offer   = await source.createOffer();
   const streams = await sink.getTracks(offer);
 
   for (let [id,stream] of Object.entries(streams))
