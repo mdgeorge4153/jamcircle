@@ -1,21 +1,52 @@
+/**
+ * This module provides a simple interface for streaming a collection of
+ * MediaStreams from one endpoint to another.
+ *
+ * On the sending endpoint:
+ *    let source = new VideoSource(streams, send_signal, config);
+ *    let offer  = await source.createOffer();
+ *    // send offer to remote endpoint
+ *
+ *    // when you're done:
+ *    source.close();
+ *
+ * On the receiving endpoint:
+ *    // receive offer from video sender
+ *    let sink    = new VideoSink(offer, send_signal, config);
+ *    let streams = await sink.getStreams();
+ *
+ *    // when you're done:
+ *    sink.close();
+ * 
+ * The streams object passed to the source constructor should have MediaStreams
+ * as values; you can use any keys you want.  The sink's getStreams method will
+ * return an object with the same structure (the same keys mapped, each mapped
+ * to a MediaStream).
+ *
+ * Both constructors require a send_signal argument; this should be a function
+ * that, when called, delivers its argument to the remote endpoint and calls
+ * recv_signal on it.  As a simple (local) example:
+ *
+ *    let sink;
+ *    let source = new VideoSource(..., (msg) =>   sink.recv_signal(msg), ...);
+ *    sink       = new   VideoSink(..., (msg) => source.recv_signal(msg), ...);
+ *
+ * A more realistic application would use websockets or something to convey the
+ * message to the remote endpoint (this is called signaling in WebRTC parlance).
+ *
+ * The send_signal function given to the source constructor won't be called
+ * until after getStreams(() is called on the corresponding sink, so you don't
+ * have to worry about messages getting sent before the remote endpoint is set
+ * up to receive them.
+ *
+ * // TODO: document config object
+ * // TODO: document exception behavior
+ * // TODO: typescript interface
+ */
+
 'use strict';
 
-/**
- * Source:
- *              // send_signal(msg) will not be called until after
- *              // recv_signal(msg) has been called; this means you don't have to
- *              // ensure that the sink is ready to receive messages
- *    constructor  : tracks * send_signal * config? -> source
- *    createOffer  : source -> offer
- *    recv_signal  : source * message -> ()
- *    close        : source -> ()
- *
- * Sink:
- *    constructor : offer * send_signal * config? -> sink
- *    tracks      : sink -> tracks promise
- *    recv_signal : sink * message -> ()
- *    close       : sink -> ()
- */
+// TODO: clean up / simplify implementation, consolidate exceptions and logging
 
 let default_configuration = {
   log: (msg) => msg,
@@ -46,6 +77,7 @@ class VideoConnection {
   }
 
   async _addIceCandidate(candidate) {
+    // TODO: buffer messages until can_send
     try {
       await this.pc.addIceCandidate(candidate);
       this.log(`${this.name} addIceCandidate success`);
@@ -75,14 +107,14 @@ class VideoConnection {
 }
 
 class VideoSource extends VideoConnection {
-  constructor(config, send_signal, streams) {
+  constructor(streams, send_signal, config = default_configuration) {
     super({name: 'source', ...config}, send_signal);
     this.streams = streams;
   }
 
   recv_signal(msg) {
     if (msg.answer)
-      return this.setAnswer(msg.answer);
+      return this._setAnswer(msg.answer);
     else
       return super.recv_signal(msg);
   }
@@ -117,7 +149,7 @@ class VideoSource extends VideoConnection {
     }
   }
 
-  async setAnswer(answer) {
+  async _setAnswer(answer) {
     this.log(`${this.name} setRemoteDescription start`);
     try {
       await this.pc.setRemoteDescription(answer);
@@ -130,16 +162,9 @@ class VideoSource extends VideoConnection {
 }
 
 class VideoSink extends VideoConnection {
-  constructor(config, send_signal) {
+  constructor(send_signal, config) {
     super({name: 'sink', ...config}, send_signal);
     this.ids = null;
-  }
-
-  _gotRemoteStream(e) {
-    for (let s of e.streams)
-      console.log(this.ids[s.id]);
-    for (let track of e.streams[0].getTracks())
-      this.gotRemoteTrack(track);
   }
 
   async getTracks({offer: desc, ids}) {

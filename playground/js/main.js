@@ -85,15 +85,15 @@ async function call() {
   const configuration = getSelectedSdpSemantics();
   console.log('RTCPeerConnection configuration:', configuration);
   source = new VideoSource(
-    configuration,                // config
-    (msg) => sink.recv_signal(msg), // send
-    {'camera': localStream}       // tracks
+    {'camera': localStream}         // streams
+    (msg) => sink.recv_signal(msg), // send_signal
+    configuration,                  // config
   );
 
   console.log('Created local peer connection object pc1');
   sink = new VideoSink(
-    configuration,                  // config
-    (msg) => source.recv_signal(msg), // send
+    (msg) => source.recv_signal(msg), // send_signal
+    configuration,                    // config
   );
   console.log('Created remote peer connection object pc2');
 
