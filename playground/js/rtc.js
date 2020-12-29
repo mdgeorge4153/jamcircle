@@ -130,10 +130,8 @@ class VideoSource extends VideoConnection {
 }
 
 class VideoSink extends VideoConnection {
-  constructor(config, send_signal, gotRemoteTrack) {
+  constructor(config, send_signal) {
     super({name: 'sink', ...config}, send_signal);
-    this.pc.addEventListener('track', (e) => this._gotRemoteStream(e));
-    this.gotRemoteTrack = gotRemoteTrack;
     this.ids = null;
   }
 
@@ -144,8 +142,30 @@ class VideoSink extends VideoConnection {
       this.gotRemoteTrack(track);
   }
 
-  async createAnswer({offer: desc, ids}) {
-    this.ids = ids;
+  async getTracks({offer: desc, ids}) {
+
+    let result = new Promise((resolve, reject) => {
+      this.pc.addEventListener('track', (e) => {
+        if (e.streams.length != Object.keys(ids).length) {
+          console.log("not enough streams, waiting for more");
+          return;
+        }
+
+        let result = {};
+        for (let s of e.streams) {
+          if (ids[s.id])
+            result[ids[s.id]] = s;
+          else {
+            console.log("unexpected stream id");
+            reject();
+            return;
+          }
+        }
+
+        resolve(result);
+      });
+    });
+
     this.log(`${this.name} setRemoteDescription start`);
     try {
       await this.pc.setRemoteDescription(desc);
@@ -171,12 +191,12 @@ class VideoSink extends VideoConnection {
         this.log(`Failed to set session description: ${e.toString()}`);
         throw e;
       }
-
-      return answer;
     } catch (e) {
       this.log(`Failed to create session description: ${e.toString()}`);
       throw e;
     }
+
+    return result;
   }
 }
 
