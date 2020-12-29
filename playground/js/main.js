@@ -87,7 +87,7 @@ async function call() {
   source = new VideoSource(
     configuration,                // config
     (msg) => sink.recv_signal(msg), // send
-    localStream.getTracks()       // tracks
+    {'camera': localStream}       // tracks
   );
 
   console.log('Created local peer connection object pc1');

@@ -75,9 +75,9 @@ class VideoConnection {
 }
 
 class VideoSource extends VideoConnection {
-  constructor(config, send_signal, tracks) {
+  constructor(config, send_signal, streams) {
     super({name: 'source', ...config}, send_signal);
-    tracks.forEach((track) => this.addTrack(track));
+    this.streams = streams;
   }
 
   recv_signal(msg) {
@@ -87,15 +87,18 @@ class VideoSource extends VideoConnection {
       return super.recv_signal(msg);
   }
 
-  addTrack(track) {
-    this.log(track);
-    track.contentHint="hello hello";
-    this.pc.addTrack(track, new MediaStream());
-  }
-
   async createOffer() {
     try {
       this.log(`${this.name} createOffer start`);
+
+      let ids = {};
+      console.log(this.streams)
+      for (let [key, stream] of Object.entries(this.streams)) {
+        ids[stream.id] = key;
+        for (let track of stream.getTracks())
+          this.pc.addTrack(track, stream);
+      }
+
       const desc = await this.pc.createOffer(offerOptions);
 
       this.log(`${this.name} setLocalDescription start`);
@@ -107,7 +110,7 @@ class VideoSource extends VideoConnection {
         throw e;
       }
 
-      return desc;
+      return {offer: desc, ids};
     } catch (e) {
       this.log(`Failed to create session description: ${e.toString()}`);
       throw e;
@@ -131,14 +134,18 @@ class VideoSink extends VideoConnection {
     super({name: 'sink', ...config}, send_signal);
     this.pc.addEventListener('track', (e) => this._gotRemoteStream(e));
     this.gotRemoteTrack = gotRemoteTrack;
+    this.ids = null;
   }
 
   _gotRemoteStream(e) {
+    for (let s of e.streams)
+      console.log(this.ids[s.id]);
     for (let track of e.streams[0].getTracks())
       this.gotRemoteTrack(track);
   }
 
-  async createAnswer(desc) {
+  async createAnswer({offer: desc, ids}) {
+    this.ids = ids;
     this.log(`${this.name} setRemoteDescription start`);
     try {
       await this.pc.setRemoteDescription(desc);
