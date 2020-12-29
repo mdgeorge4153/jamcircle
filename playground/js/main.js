@@ -43,10 +43,6 @@ remoteVideo.addEventListener('resize', () => {
 let localStream;
 let source;
 let sink;
-const offerOptions = {
-  offerToReceiveAudio: 1,
-  offerToReceiveVideo: 1
-};
 
 async function start() {
   console.log('Requesting local stream');

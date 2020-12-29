@@ -52,6 +52,11 @@ let default_configuration = {
   log: (msg) => msg,
 }
 
+const offerOptions = {
+  offerToReceiveAudio: 1,
+  offerToReceiveVideo: 1
+};
+
 class VideoConnection {
   constructor(configuration, send_signal) {
     this.pc = new RTCPeerConnection(configuration);
@@ -67,7 +72,7 @@ class VideoConnection {
 
   recv_signal(msg) {
     if (msg.candidate)
-      return this._addIceCandidate(msg.candidate);
+      return this._addIceCandidate(JSON.parse(msg.candidate));
     else
       this.log('unexpected message: ', msg);
   }
@@ -99,7 +104,7 @@ class VideoConnection {
   }
 
   async _onIceCandidate(event) {
-    let message = {candidate: event.candidate};
+    let message = {candidate: JSON.stringify(event.candidate)};
 
     if (this.can_send) {
       try {
