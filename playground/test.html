@@ -1,0 +1,27 @@
+<html>
+
+<body>
+
+<iframe
+  id="source" width="45%" height="95%" src="source.html"
+  allow="camera;microphone;autoplay"
+></iframe>
+<iframe id="sink"   width="45%" height="95%" src="sink.html"   allow="camera;microphone"></iframe>
+
+<script>
+let sink   = document.getElementById('sink').contentWindow;
+let source = document.getElementById('source').contentWindow;
+
+window.addEventListener('message', function (event) {
+  // console.log("message passing: ", event.data);
+  if (event.data.recipient == 'source')
+    source.postMessage(event.data.msg,"*");
+  else if (event.data.recipient == 'sink')
+    sink.postMessage(event.data.msg,"*");
+  else
+    console.log('bad message');
+});
+</script>
+</body>
+
+</html>

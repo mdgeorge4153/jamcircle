@@ -1,0 +1,44 @@
+<html>
+
+<body>
+
+<h1>Sink</h1>
+
+<video id="camera" autoplay>
+  </video>
+
+<video id="movie" autoplay>
+  </video>
+
+<script src="js/rtc.js"></script>
+
+<script>
+
+function sendToSource(msg) {
+  // console.log("sink sending: ", msg);
+  window.parent.postMessage({recipient: 'source', msg: msg}, "*");
+}
+
+let sink;
+
+window.addEventListener('message', async function(event) {
+  // console.log("sink received: ", event.data);
+  if (event.data.offer) {
+    console.log("creating sink");
+    sink = new VideoSink(sendToSource);
+    console.log("getting tracks");
+    let tracks = await sink.getTracks(event.data.offer);
+    console.log("got tracks", tracks);
+
+    document.getElementById('camera').srcObject = tracks['camera'];
+  }
+  else {
+    sink.recv_signal(event.data);
+  }
+});
+
+</script>
+
+</body>
+
+</html>

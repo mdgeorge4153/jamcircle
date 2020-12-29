@@ -1,0 +1,73 @@
+<html>
+
+<body>
+
+<h1>Source</h1>
+
+<!--
+<video autoplay controls id="movie" src="mov_bbb.ogg">
+  </video>
+-->
+
+<video autoplay id="camera">
+  </video>
+
+<script src="js/rtc.js"></script>
+
+<script>
+
+window.onload = async function(event) {
+
+function sendToSink(msg) {
+  // console.log("source sending: ", msg);
+  window.parent.postMessage({recipient: 'sink', msg: msg}, "*");
+}
+
+console.log("loaded");
+
+/*
+const movieElt  = document.getElementById('movie');
+let movieStream = new Promise(function (resolve,reject) {
+  movieElt.addEventListener('canplay', function (event) {
+    let stream;
+    if (movieElt.captureStream) {
+      stream = movieElt.captureStream();
+    } else if (movieElt.mozCaptureStream) {
+      stream = movieElt.mozCaptureStream();
+    } else {
+      console.error('Stream capture is not supported');
+      stream = null;
+    }
+    resolve(stream);
+  });
+});
+*/
+
+let cameraStream = navigator.mediaDevices.getUserMedia({audio:true, video:true});
+const cameraElt = document.getElementById('camera');
+
+console.log("waiting for movie");
+// let movie  = await movieStream;
+console.log("waiting for camera");
+let camera = await cameraStream;
+
+cameraElt.srcObject = camera;
+console.log("creating source");
+
+const source = new VideoSource({camera}, sendToSink);
+
+window.addEventListener('message', function (event) {
+  // console.log("source received: ", event.data);
+  source.recv_signal(event.data);
+});
+
+console.log("offering video");
+let offer = await source.createOffer();
+sendToSink({offer});
+
+};
+</script>
+
+</body>
+
+</html>
