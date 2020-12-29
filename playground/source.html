@@ -4,10 +4,8 @@
 
 <h1>Source</h1>
 
-<!--
 <video autoplay controls id="movie" src="mov_bbb.ogg">
   </video>
--->
 
 <video autoplay id="camera">
   </video>
@@ -25,7 +23,6 @@ function sendToSink(msg) {
 
 console.log("loaded");
 
-/*
 const movieElt  = document.getElementById('movie');
 let movieStream = new Promise(function (resolve,reject) {
   movieElt.addEventListener('canplay', function (event) {
@@ -41,20 +38,19 @@ let movieStream = new Promise(function (resolve,reject) {
     resolve(stream);
   });
 });
-*/
 
 let cameraStream = navigator.mediaDevices.getUserMedia({audio:true, video:true});
 const cameraElt = document.getElementById('camera');
 
 console.log("waiting for movie");
-// let movie  = await movieStream;
+let movie  = await movieStream;
 console.log("waiting for camera");
 let camera = await cameraStream;
 
 cameraElt.srcObject = camera;
 console.log("creating source");
 
-const source = new VideoSource({camera}, sendToSink);
+const source = new VideoSource({camera,movie}, sendToSink);
 
 window.addEventListener('message', function (event) {
   // console.log("source received: ", event.data);

@@ -31,6 +31,7 @@ window.addEventListener('message', async function(event) {
     console.log("got tracks", tracks);
 
     document.getElementById('camera').srcObject = tracks['camera'];
+    document.getElementById('movie').srcObject = tracks['movie'];
   }
   else {
     sink.recv_signal(event.data);

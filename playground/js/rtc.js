@@ -189,29 +189,27 @@ class VideoSink extends VideoConnection {
     super({name: 'sink', ...config}, send_signal);
     this.ids = null;
     this._start_sending();
+    this.streams = {};
   }
 
   async getTracks({offer: desc, ids}) {
 
     let result = new Promise((resolve, reject) => {
       this.pc.addEventListener('track', (e) => {
-        if (e.streams.length != Object.keys(ids).length) {
-          console.log("not enough streams, waiting for more");
-          return;
-        }
 
-        let result = {};
         for (let s of e.streams) {
           if (ids[s.id])
-            result[ids[s.id]] = s;
+            this.streams[ids[s.id]] = s;
           else {
             console.log("unexpected stream id");
             reject();
             return;
           }
         }
-
-        resolve(result);
+        if (Object.keys(this.streams).length == Object.keys(ids).length)
+          resolve(this.streams);
+        else
+          console.log("not enough streams, waiting for more");
       });
     });
 
