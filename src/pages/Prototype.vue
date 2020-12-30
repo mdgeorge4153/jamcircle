@@ -53,7 +53,9 @@ export default {
     
   methods: {
     fastForward() {
-      this.$store.dispatch('fastForward');
+      let n   = this.users.indexOf(me);
+      this.users = this.users.slice(0,n).concat(this.users.slice(n+1), me);
+      this.fixVideos();
     },
     cycle() {
       this.$store.dispatch('cycle');

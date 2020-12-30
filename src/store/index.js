@@ -19,7 +19,6 @@ Vue.use(Vuex);
 export default function() {
 
   const socket = io('http://localhost:8080');
-  // this is for ensuring connection
 
   const store = new Vuex.Store({
     modules: {
@@ -33,7 +32,7 @@ export default function() {
       username:   '',
       icon:       'fas fa-microphone-alt',
       playing:    'solo',
-      id:         socket.id,
+      id:         null,
 
       icons: [
         { name: 'Other',  icon: 'fas fa-microphone-alt' },
@@ -73,6 +72,7 @@ export default function() {
       /** Connection establishment ********************************************/
 
       SOCKET_CONNECT(state) {
+        state.id = this._vm.$socket.client.id;
         this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
       },
 
@@ -81,7 +81,7 @@ export default function() {
 
         // update past/present/future status
         let status  = 'past';
-        let me      = this._vm.$socket.client.id;
+        let me      = state.id;
         for (let {id} of users) {
           if (id == me) {
             Vue.set(state.status, id, 'me');
