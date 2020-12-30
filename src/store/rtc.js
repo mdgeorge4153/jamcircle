@@ -109,7 +109,7 @@ export default {
       // forward ICE candidates to prev
       const that = this;
       peer.addEventListener('icecandidate', function(event) {
-        console.log("ice event: ", event);
+        // console.log("ice event: ", event);
         if (event.candidate)
           that._vm.$socket.client.emit('direct message', {recipient: prevID, candidate: event.candidate});
       });
@@ -152,7 +152,7 @@ export default {
 
       // forward ICE candidates to prev
       peer.addEventListener('icecandidate', function (event) {
-        console.log("ice event: ", event);
+        // console.log("ice event: ", event);
         if (event.candidate)
           this._vm.$socket.client.emit('direct message', {recipient: nextID, candidate: event.candidate});
       });
