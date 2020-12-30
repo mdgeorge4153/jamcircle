@@ -11,25 +11,27 @@ export default {
     nextConn:      null,
     answerHandler: null,
 
-    tracks:    {},
+    streams:   {},
 
     rtcConfig: {},
     vidConfig: { audio: false, video: true, aspectRatio: 1.7777 },
   },
 
   getters: {
-    track: (state) => (id) => state.tracks[id],
+    stream: (state) => (id) => state.streams[id],
     index: (s,g,rootState) => rootState.users.findIndex((user) => user.id == rootState.id),
   },
 
   mutations: {
     CLEAR_TRACKS(state) {
       for (let i = 0; i < state.index; i++)
-        Vue.set(state.tracks, users[i].id, null);
+        Vue.set(state.streams, users[i].id, null);
     },
 
     SET_TRACK(state, track) {
-      Vue.set(state.tracks, track.contentHint, track);
+      const stream = new MediaStream();
+      stream.addTrack(track);
+      Vue.set(state.streams, track.contentHint, stream);
     },
 
     SET_PREV(state, {prevID, prevConn, offerHandler}) {
@@ -169,9 +171,9 @@ export default {
         let id     = context.rootState.users[i].id;
         let stream = new MediaStream();
         let unsubscribe = this._vm.$watch(
-          () => context.state.tracks[id], // watch expression
+          () => context.state.streams[id], // watch expression
           function() {                    // callback
-            let track = context.state.tracks[id];
+            let track = context.state.streams[id].getTracks()[0];
             console.log("track watch callback", id, track);
             if (track) {
               console.log("adding track", track, stream);

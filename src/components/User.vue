@@ -62,14 +62,7 @@ export default {
     },
 
     stream() {
-      const track = this.$store.getters.track(this.id);
-
-      if (!track)
-        return null;
-
-      const stream = new MediaStream();
-      stream.addTrack(this.$store.getters.track(this.id));
-      return stream;
+      return this.$store.getters.stream(this.id);
     },
   },
 }
