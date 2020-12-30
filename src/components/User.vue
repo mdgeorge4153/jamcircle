@@ -2,11 +2,11 @@
      sizing.  Sizing is handled by UserList -->
 <template>
   <div class="user-card text-white" v-bind:class="{ me: status == 'me' }">
-    <video ref="video" autoplay />
+    <video ref="video" autoplay :src-object.prop.camel="stream" />
 
     <div class="absolute-center">
       <q-icon v-if="status == 'future'" size="lg" name="slow_motion_video"/>
-      <q-circular-progress indeterminate v-if="status == 'past' && !track" size="lg"/>
+      <q-circular-progress indeterminate v-if="status == 'past' && !stream" size="lg"/>
       </div>
     <!--
     <user-future v-else/>
@@ -56,31 +56,20 @@ export default {
     playing:  String, // one of 'solo', 'muted', or 'playing'
   },
 
-  data() {
-    return { stream: new MediaStream() };
-  },
-
-  mounted() {
-    this.$refs.video.srcObject = this.stream;
-  },
-
-  watch: {
-    track: {
-      immediate: true,
-      handler() {
-        this.stream.getTracks().forEach(this.stream.removeTrack);
-        if (this.status != 'future' && this.track != null)
-          this.stream.addTrack(this.track);
-      },
-    },
-  },
-
   computed: {
     status() {
       return this.$store.getters.status(this.id);
     },
-    track() {
-      return this.$store.getters.track(this.id);
+
+    stream() {
+      const track = this.$store.getters.track(this.id);
+
+      if (!track)
+        return null;
+
+      const stream = new MediaStream();
+      stream.addTrack(this.$store.getters.track(this.id));
+      return stream;
     },
   },
 }
