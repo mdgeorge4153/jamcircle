@@ -33,6 +33,7 @@ export default function() {
       icon:       'fas fa-microphone-alt',
       playing:    'solo',
       id:         null,
+      socket:     socket,
 
       icons: [
         { name: 'Other',  icon: 'fas fa-microphone-alt' },
