@@ -5,3 +5,17 @@ export function makeProperty(property, mutator) {
   };
 }
 
+export function waitFor(context, name, filter = (value) => value) {
+  return new Promise(function(resolve, reject) {
+    const unwatch = context.watch(
+      () => context[name],
+      () => { if(filter(context[name])) {
+              unwatch();
+              resolve(context[name]);
+            } },
+      {immediate: true}
+    );
+  });
+}
+
+
