@@ -18,9 +18,8 @@ Vue.use(Vuex);
 
 export default function() {
 
+  const socket = io('http://localhost:8080');
   // this is for ensuring connection
-  let resolve_connected;
-  let my_id = new Promise((resolve, reject) => resolve_connected = resolve);
 
   const store = new Vuex.Store({
     modules: {
@@ -34,8 +33,7 @@ export default function() {
       username:   '',
       icon:       'fas fa-microphone-alt',
       playing:    'solo',
-      id_promise: my_id, // use this for actions that may occur before connection
-      id:         null,
+      id:         socket.id,
 
       icons: [
         { name: 'Other',  icon: 'fas fa-microphone-alt' },
@@ -75,8 +73,6 @@ export default function() {
       /** Connection establishment ********************************************/
 
       SOCKET_CONNECT(state) {
-        state.id = this._vm.$socket.client.id;
-        resolve_connected(state.id);
         this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
       },
 
@@ -118,7 +114,6 @@ export default function() {
   // SocketIO needs to be set up here instead of a boot file, because it needs
   // access to the store to register mutations and actions.  See here:
   // https://github.com/probil/vue-socket.io-extended/issues/384
-  const socket = io('http://localhost:8080');
   Vue.use(VueSocketIoExt, socket, { store });
 
   store.dispatch('initialize');
