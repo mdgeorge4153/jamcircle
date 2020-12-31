@@ -5,15 +5,20 @@ export function makeProperty(property, mutator) {
   };
 }
 
-export function waitFor(context, name, filter = (value) => value) {
+export function waitFor(store, getter, filter = (value) => value) {
   return new Promise(function(resolve, reject) {
-    const unwatch = context.watch(
-      () => context[name],
-      () => { if(filter(context[name])) {
-              unwatch();
-              resolve(context[name]);
-            } },
-      {immediate: true}
+
+    const value = getter(store.state);
+    if (filter(value))
+      return resolve(value);
+
+    const unwatch = store.watch(
+      getter,
+      () => { const value = getter(store.state);
+              if(filter(value)) {
+                unwatch();
+                resolve(value);
+            } }
     );
   });
 }

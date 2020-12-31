@@ -12,7 +12,7 @@ export default {
     outgoing:      null, // VideoSource
 
     localStream:   null, // MediaStream
-    remoteStreams: null, // {[id]: MediaStream}
+    remoteStreams: {},   // {[id]: MediaStream}
 
     rtcConfig: {},
     vidConfig: { audio: false, video: true, aspectRatio: 1.7777 },
@@ -82,22 +82,29 @@ export default {
     },
 
     async getVideos(context) {
-      let localStream  = waitFor(context, 'localStream');
-      let remoteStream = waitFor(context, 'remoteStream');
+      console.log("getVideos", this);
+      let localStream   = waitFor(this, (state) => state.rtc.localStream);
+      let remoteStreams = waitFor(this, (state) => state.rtc.remoteStreams);
 
-      return {[context.state.id]: await localStream, ...await remoteStreams};
+      let local = await localStream;
+      console.log("local streams ready");
+      let remote = await remoteStreams;
+      console.log("remote streams ready");
+
+      return {[context.rootState.id]: local, ...remote};
     },
 
     async socket_update(context, users) {
-      const n = users.findIndex((user) => user.id == context.state.id);
+      const n = users.findIndex((user) => user.id == context.rootState.id);
       const predID = n <= 0 ? null : users[n-1].id;
 
+      console.log('update', context.rootState.id);
       context.commit('SET_PRED', predID);
 
       if (predID == null)
         return;
 
-      context.state.socket.emit('direct message', {recipient: predID, request: true});
+      context.rootState.socket.emit('direct message', {recipient: predID, request: true});
     },
 
     async handleOffer(context, offer) {
@@ -109,14 +116,14 @@ export default {
       let streams  = await context.dispatch('getVideos');
       let outgoing = new VideoSource(
         streams,
-        (msg) => context.state.socket.emit('direct message', {recipient: succID, signal: msg}),
+        (msg) => context.rootState.socket.emit('direct message', {recipient: succID, signal: msg}),
         context.state.rtcConfig
       );
 
       let offer = await outgoing.createOffer();
 
-      context.commit('SET_SUCC', {senderID, outgoing});
-      context.state.socket.emit('direct message', {recipient: succID, offer});
+      context.commit('SET_SUCC', {succID: senderID, outgoing});
+      context.rootState.socket.emit('direct message', {recipient: senderID, offer});
     },
 
     socket_directMessage(context, {senderID, ...msg}) {

@@ -128,7 +128,7 @@ class VideoConnection {
   }
 }
 
-class VideoSource extends VideoConnection {
+export class VideoSource extends VideoConnection {
   constructor(streams, send_signal, config = default_configuration) {
     super({name: 'source', ...config}, send_signal);
     this.streams = streams;
@@ -184,7 +184,7 @@ class VideoSource extends VideoConnection {
   }
 }
 
-class VideoSink extends VideoConnection {
+export class VideoSink extends VideoConnection {
   constructor(send_signal, config) {
     super({name: 'sink', ...config}, send_signal);
     this.ids = null;
