@@ -35,35 +35,16 @@ export default {
       state.remoteStreams = streams;
     },
 
-    SET_PRED(state, predID) {
-      if (predID == state.predID)
-        // no change
-        return;
+    SET_PRED(state, {predID, incoming, remoteStreams}) {
+      state.predID        = predID;
+      state.incoming      = incoming;
+      state.remoteStreams = remoteStreams;
 
-      // close old connection
-      if (state.incoming)
-        state.incoming.close();
-
-      if (predID == null) {
-        // no predecessors
-        state.incoming      = null;
-        state.remoteStreams = {};
-        return;
-      }
-
-      // set up to receive remote data
-      state.remoteStreams = null;
-      state.incoming = new VideoSink(
-        (msg) => state.socket.emit('direct message', {recipient: predID, signal: msg}),
-        state.rtcConfig
-      );
     },
 
     SET_SUCC(state, {succID, outgoing}) {
-      if (state.outgoing)
-        state.outgoing.close();
-
       state.succID   = succID;
+      state.outgoing = outgoing;
     },
   },
 
@@ -99,24 +80,50 @@ export default {
       const predID = n <= 0 ? null : users[n-1].id;
 
       console.log('update', context.rootState.id);
-      context.commit('SET_PRED', predID);
+      context.dispatch('setPred', predID);
+    },
 
-      if (predID == null)
+    setPred(context, predID) {
+      if (predID == context.state.predID)
+        // no change
         return;
 
+      // close old connection
+      if (context.state.incoming)
+        context.state.incoming.close();
+
+      if (predID == null) {
+        // no predecessors
+        context.commit('SET_PRED', {
+          incoming: null,
+          remoteStreams: {},
+          predID
+        });
+        return;
+      }
+
+      // set up to receive remote data
+      const incoming = new VideoSink(
+        (msg) => context.rootState.socket.emit('direct message', {recipient: predID, signal: msg}),
+        context.state.rtcConfig
+      );
+      context.commit('SET_PRED', {incoming, predID, remoteStreams: null});
       context.rootState.socket.emit('direct message', {recipient: predID, request: true});
     },
 
     async handleOffer(context, offer) {
-      let streams = await context.state.incoming.getStreams(offer);
+      let streams = await context.state.incoming.getTracks(offer);
       context.commit('SET_REMOTE_STREAMS', streams);
     },
 
     async handleRequest(context, senderID) {
       let streams  = await context.dispatch('getVideos');
+      if (context.state.outgoing)
+        context.state.outgoing.close();
+
       let outgoing = new VideoSource(
         streams,
-        (msg) => context.rootState.socket.emit('direct message', {recipient: succID, signal: msg}),
+        (msg) => context.rootState.socket.emit('direct message', {recipient: senderID, signal: msg}),
         context.state.rtcConfig
       );
 
@@ -139,6 +146,9 @@ export default {
       if (msg.request)
         return context.dispatch('handleRequest', senderID);
 
+      console.log("my id:", context.rootState.id);
+      console.log("my pred:", context.state.predID);
+      console.log("my succ:", context.state.succID);
       console.log('unexpected direct message', {senderID, ...msg});
     },
 
