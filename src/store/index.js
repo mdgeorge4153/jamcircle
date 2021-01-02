@@ -18,7 +18,13 @@ Vue.use(Vuex);
 
 export default function() {
 
-  const socket = io('http://localhost:8080');
+  const socket = io('');
+  socket.onAny(function(msg,args) {
+    console.log('socket.io recevice message: ', msg, args);
+  });
+  socket.on('update', function (msg) {
+    console.log('socket.io receied update', msg);
+  });
 
   const store = new Vuex.Store({
     modules: {
@@ -46,6 +52,7 @@ export default function() {
 
     getters: {
       status: (state) => (id) => state.status[id],
+      index:  (state) => state.users.findIndex((user) => user.id == state.id),
     },
 
     mutations: {
@@ -106,7 +113,8 @@ export default function() {
       },
 
       /* receive metadata updates from server */
-      socket_update(context, users) {
+      socket_update(context, {users,sequence}) {
+        console.log('socket_update', {users,sequence});
         context.commit('SET_USERS', users);
       },
     },

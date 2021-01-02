@@ -15,7 +15,13 @@ export default {
     remoteStreams: {},   // {[id]: MediaStream}
 
     rtcConfig: {},
-    vidConfig: { audio: false, video: true, aspectRatio: 1.7777 },
+    vidConfig: {
+      audio: false,
+      video: {
+        aspectRatio: 1.7777,
+        width: 200,
+      },
+    },
   },
 
   getters: {
@@ -64,22 +70,26 @@ export default {
 
     async getVideos(context) {
       console.log("getVideos", this);
-      let localStream   = waitFor(this, (state) => state.rtc.localStream);
-      let remoteStreams = waitFor(this, (state) => state.rtc.remoteStreams);
+      const users = context.rootState.users.slice(0,context.getters.index);
+      const localStream   = waitFor(this, (state) => state.rtc.localStream);
+      const remoteStreams = waitFor(this, (state) => state.rtc.remoteStreams);
 
       let local = await localStream;
       console.log("local streams ready");
       let remote = await remoteStreams;
       console.log("remote streams ready");
 
-      return {[context.rootState.id]: local, ...remote};
+      let streams = {[context.rootState.id]: local};
+      for (let u of users) {
+        streams[u.id] = remote[u.id];
+      }
+      return streams;
     },
 
-    async socket_update(context, users) {
-      const n = users.findIndex((user) => user.id == context.rootState.id);
+    async socket_update(context, {users,sequence}) {
+      const n = context.getters.index;
       const predID = n <= 0 ? null : users[n-1].id;
 
-      console.log('update', context.rootState.id);
       context.dispatch('setPred', predID);
     },
 
