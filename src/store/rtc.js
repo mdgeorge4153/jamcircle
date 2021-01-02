@@ -41,6 +41,8 @@ export default {
     },
 
     SET_REMOTE_STREAMS(state, streams) {
+      for (let stream of Object.values(streams))
+        console.log(stream.contentHint);
       state.remoteStreams = streams;
     },
 
@@ -67,6 +69,10 @@ export default {
       };
 
       let stream = await navigator.mediaDevices.getUserMedia(constraints);
+      for (let audio of stream.getAudioTracks())
+        audio.contentHint = "music";
+      for (let video of stream.getVideoTracks())
+        video.contentHint = "motion";
 
       context.commit('SET_MYSTREAM', stream);
     },
@@ -78,12 +84,17 @@ export default {
       const remoteStreams = waitFor(this, (state) => state.rtc.remoteStreams);
 
       let local = await localStream;
-      console.log("local streams ready");
       let remote = await remoteStreams;
-      console.log("remote streams ready");
 
       let streams = {[context.rootState.id]: local};
       for (let u of users) {
+        const stream = remote[u.id];
+
+        for (const audio of stream.getAudioTracks())
+          audio.contentHint = "music";
+        for (const video of stream.getVideoTracks())
+          video.contentHint = "motion";
+
         streams[u.id] = remote[u.id];
       }
       return streams;
