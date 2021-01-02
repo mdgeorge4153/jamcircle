@@ -26,9 +26,12 @@ export default {
 
   getters: {
     stream: (state,g,rootState) => (id) => {
-      if (id == rootState.id)          return state.localStream;
-      if (state.remoteStreams != null) return state.remoteStreams[id];
-      return null;
+      const status = rootState.status[id];
+      switch(rootState.status[id]) {
+        case 'me':     return state.localStream;
+        case 'past':   return state.remoteStreams == null ? null : state.remoteStreams[id];
+        case 'future': return null;
+      }
     },
   },
 
