@@ -29,7 +29,8 @@
 </template>
 
 <style>
-.user-card {
+.user-card video {
+  transform: scaleX(-1);
 }
 
 .user-card > :first-child {
