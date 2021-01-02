@@ -14,7 +14,7 @@
 
     <div class="text-h6 absolute-top-left q-ma-sm">
       <q-icon v-if="icon" v-bind:name="icon"/>
-      {{ username }}
+      {{ username }} {{ id.substring(0,5) }}
       </div>
 
     <div v-if="playing == 'muted'" class="absolute-bottom-right">
