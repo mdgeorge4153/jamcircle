@@ -19,12 +19,6 @@ Vue.use(Vuex);
 export default function() {
 
   const socket = io('');
-  socket.onAny(function(msg,args) {
-    console.log('socket.io recevice message: ', msg, args);
-  });
-  socket.on('update', function (msg) {
-    console.log('socket.io receied update', msg);
-  });
 
   const store = new Vuex.Store({
     modules: {
@@ -80,8 +74,8 @@ export default function() {
       /** Connection establishment ********************************************/
 
       SOCKET_CONNECT(state) {
-        state.id = this._vm.$socket.client.id;
-        this._vm.$socket.client.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
+        state.id = socket.id;
+        socket.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
       },
 
       SET_USERS(state, users) {
@@ -104,17 +98,16 @@ export default function() {
     actions: {
       /* moves this player to the tail */
       fastForward(context) {
-        this._vm.$socket.client.emit('fast forward');
+        socket.emit('fast forward');
       },
 
       /* causes the head player to fastForward */
       cycle(context) {
-        this._vm.$socket.client.emit('cycle');
+        socket.emit('cycle');
       },
 
       /* receive metadata updates from server */
       socket_update(context, {users,sequence}) {
-        console.log('socket_update', {users,sequence});
         context.commit('SET_USERS', users);
       },
     },
