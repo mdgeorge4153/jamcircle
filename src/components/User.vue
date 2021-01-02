@@ -12,7 +12,7 @@
     <user-future v-else/>
     -->
 
-    <div class="text-h6 absolute-top-left q-ma-sm">
+    <div class="username text-h6 absolute-top-left q-ma-sm">
       <q-icon v-if="icon" v-bind:name="icon"/>
       {{ username }} {{ id.substring(0,5) }}
       </div>
@@ -31,6 +31,12 @@
 <style>
 .user-card video {
   transform: scaleX(-1);
+}
+
+.username {
+  background: rgba(0,0,0,0.5);
+  padding-left: 5px; padding-right: 5px;
+  border-radius: 5px;
 }
 
 .user-card > :first-child {
