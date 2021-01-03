@@ -78,7 +78,7 @@ module.exports = function (/* ctx */) {
     devServer: {
       https: false,
       port: 8080,
-      open: true,
+      open: false,
       proxy: {
         '/socket.io': {
           target: 'http://localhost:3000',
