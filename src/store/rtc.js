@@ -5,6 +5,8 @@ import {VideoSource,VideoSink} from '../rtc';
 export default {
 
   state: {
+
+    index:         -1,
     predID:        null, // id
     incoming:      null, // VideoSink
 
@@ -46,11 +48,14 @@ export default {
       state.remoteStreams = streams;
     },
 
+    SET_INDEX(state, index) {
+      state.index = index;
+    },
+
     SET_PRED(state, {predID, incoming, remoteStreams}) {
       state.predID        = predID;
       state.incoming      = incoming;
       state.remoteStreams = remoteStreams;
-
     },
 
     SET_SUCC(state, {succID, outgoing}) {
@@ -101,14 +106,16 @@ export default {
     },
 
     async socket_update(context, {users,sequence}) {
-      const n = context.getters.index;
+      const n = users.findIndex((user) => user.id == context.rootState.id);
       const predID = n <= 0 ? null : users[n-1].id;
 
-      context.dispatch('setPred', predID);
+      const oldIndex = context.state.index;
+      context.commit('SET_INDEX', n);
+      context.dispatch('setPred', {predID, oldIndex});
     },
 
-    setPred(context, predID) {
-      if (predID == context.state.predID)
+    setPred(context, {predID, oldIndex}) {
+      if (predID == context.state.predID && context.state.index <= oldIndex)
         // no change
         return;
 
