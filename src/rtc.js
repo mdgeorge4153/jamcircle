@@ -50,6 +50,7 @@
 
 let default_configuration = {
   log: (msg) => msg,
+  iceServers: [{urls: "stun:stun.stunprotocol.org"}],
 }
 
 const offerOptions = {
@@ -59,6 +60,7 @@ const offerOptions = {
 
 class VideoConnection {
   constructor(configuration, send_signal) {
+    console.log("creating video connection: ", configuration);
     this.pc = new RTCPeerConnection(configuration);
     this.pc.addEventListener('icecandidate', e => this._onIceCandidate(e));
     this.pc.addEventListener('iceconnectionstatechange', e => this._onIceStateChange(e));
@@ -130,7 +132,7 @@ class VideoConnection {
 
 export class VideoSource extends VideoConnection {
   constructor(streams, send_signal, config = default_configuration) {
-    super({name: 'source', ...config}, send_signal);
+    super({...default_configuration, name: 'source', ...config}, send_signal);
     this.streams = streams;
   }
 
@@ -147,7 +149,6 @@ export class VideoSource extends VideoConnection {
       this.log(`${this.name} createOffer start`);
 
       let ids = {};
-      console.log(this.streams)
       for (let [key, stream] of Object.entries(this.streams)) {
         ids[stream.id] = key;
         for (let track of stream.getTracks())
@@ -186,7 +187,7 @@ export class VideoSource extends VideoConnection {
 
 export class VideoSink extends VideoConnection {
   constructor(send_signal, config) {
-    super({name: 'sink', ...config}, send_signal);
+    super({...default_configuration, name: 'sink', ...config}, send_signal);
     this.ids = null;
     this._start_sending();
     this.streams = {};
@@ -201,7 +202,7 @@ export class VideoSink extends VideoConnection {
           if (ids[s.id])
             this.streams[ids[s.id]] = s;
           else {
-            console.log("unexpected stream id");
+            this.log("unexpected stream id");
             reject();
             return;
           }
@@ -209,7 +210,7 @@ export class VideoSink extends VideoConnection {
         if (Object.keys(this.streams).length == Object.keys(ids).length)
           resolve(this.streams);
         else
-          console.log("not enough streams, waiting for more");
+          this.log("not enough streams, waiting for more");
       });
     });
 

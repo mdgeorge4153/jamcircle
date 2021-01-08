@@ -20,8 +20,8 @@ export default {
     vidConfig: {
       audio: false,
       video: {
-        aspectRatio: 1.7777,
-        width: 200,
+        width: 320,
+        height: 240,
       },
     },
   },
@@ -43,8 +43,6 @@ export default {
     },
 
     SET_REMOTE_STREAMS(state, streams) {
-      for (let stream of Object.values(streams))
-        console.log(stream.contentHint);
       state.remoteStreams = streams;
     },
 
