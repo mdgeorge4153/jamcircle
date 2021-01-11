@@ -2,7 +2,7 @@ JamCircle
 =========
 
 JamCircle is an app for online jamming.  It uses an unusual approach to sync up
-the players.  All of the players are arranged in a line, and everyone can hear
+the players:  all of the players are arranged in a line, and everyone can hear
 and see the players who come before them.  This avoids issues with latency,
 because you can't hear the players that are "in the future".
 
@@ -15,8 +15,8 @@ Players can decide whether they want to solo or not.  If not, they will
 automatically jump to the end of the line when it is their turn for a solo.
  
 This software is currently just a prototype; to run it, you need to install
-quasar, and run quasar dev -o.
-
+a bunch of npm packages, run the main server using npm run dev, and run the
+frontend server using quasar dev.
 
 Future ideas
 ============
@@ -26,4 +26,5 @@ Future ideas
 * Superuser that can control order, etc
 * Waiting room with chat, etc
 * More options for controlling delay and start-early
+* Mobile apps using PWA tech
 
