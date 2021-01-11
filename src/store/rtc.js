@@ -2,6 +2,42 @@ import Vue from 'vue';
 import {waitFor} from '../util';
 import {VideoSource,VideoSink} from '../rtc';
 
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+function setupAudio(state) {
+  if (state.localAudio == null || state.remoteStreams == null)
+    return null;
+
+  const ac = new AudioContext();
+  const localSrc  = ac.createMediaStreamSource(state.localAudio);
+
+  const compressor = ac.createDynamicsCompressor();
+  compressor.threshold.value = -50;
+  compressor.knee.value = 40;
+  compressor.ratio.value = 12;
+  compressor.attack.value = 0;
+  compressor.release.value = 0.25;
+
+  const filter = ac.createBiquadFilter();
+  filter.Q.value = 8.30;
+  filter.frequency.value = 355;
+  filter.gain.value = 3.0;
+  filter.type = 'bandpass';
+
+  const combined = ac.createMediaStreamDestination();
+
+  if (state.remoteAudio != null) {
+    const remoteSrc = ac.createMediaStreamSource(state.remoteAudio);
+    remoteSrc.connect(combined);
+  }
+  localSrc.connect(filter);
+  filter.connect(compressor);
+  compressor.connect(combined);
+  console.log("combining streams");
+
+  return combined.stream;
+}
+
 export default {
 
   state: {
@@ -16,9 +52,13 @@ export default {
     localStream:   null, // MediaStream
     remoteStreams: {},   // {[id]: MediaStream}
 
+    localAudio:    null, // MediaStream
+    remoteAudio:   null, // MediaStream
+    combinedAudio: null, // MediaStream; invariant: is combination of local and remote
+
     rtcConfig: {},
     vidConfig: {
-      audio: false,
+      audio: true,
       video: {
         width: 320,
         height: 240,
@@ -35,15 +75,20 @@ export default {
         case 'future': return null;
       }
     },
+    remoteAudio: (state) => state.remoteAudio,
   },
 
   mutations: {
-    SET_MYSTREAM(state, stream) {
-      state.localStream = stream;
+    SET_MYSTREAM(state, {video, audio}) {
+      state.localStream = video;
+      state.localAudio  = audio;
+      state.combinedAudio = setupAudio(state);
     },
 
-    SET_REMOTE_STREAMS(state, streams) {
+    SET_REMOTE_STREAMS(state, {audio, ...streams}) {
+      state.remoteAudio   = audio;
       state.remoteStreams = streams;
+      state.combinedAudio = setupAudio(state);
     },
 
     SET_INDEX(state, index) {
@@ -54,30 +99,42 @@ export default {
       state.predID        = predID;
       state.incoming      = incoming;
       state.remoteStreams = remoteStreams;
+      if (remoteStreams == null) {
+        state.remoteAudio = null;
+        state.combinedAudio = setupAudio(state);
+      }
     },
 
     SET_SUCC(state, {succID, outgoing}) {
       state.succID   = succID;
       state.outgoing = outgoing;
     },
+
+    SET_PLAYING(state, playing) {
+      console.log("RTC Set_playing", playing != 'muted');
+      for (const track of state.localAudio.getAudioTracks())
+        track.enabled = (playing != 'muted');
+    },
   },
 
   actions: {
     /* set up my video */
     async initialize(context) {
-      const constraints = {
-        audio: false,
-        video: true,
-        aspectRatio: 1.7777,
-      };
+      let media = await navigator.mediaDevices.getUserMedia(context.state.vidConfig);
 
-      let stream = await navigator.mediaDevices.getUserMedia(constraints);
-      for (let audio of stream.getAudioTracks())
+      const videoStream = new MediaStream();
+      const audioStream = new MediaStream();
+
+      for (let audio of media.getAudioTracks()) {
         audio.contentHint = "music";
-      for (let video of stream.getVideoTracks())
+        audioStream.addTrack(audio);
+      }
+      for (let video of media.getVideoTracks()) {
         video.contentHint = "motion";
+        videoStream.addTrack(video);
+      }
 
-      context.commit('SET_MYSTREAM', stream);
+      context.commit('SET_MYSTREAM', {video:videoStream, audio:audioStream});
     },
 
     async getVideos(context) {
@@ -89,17 +146,15 @@ export default {
       let local = await localStream;
       let remote = await remoteStreams;
 
-      let streams = {[context.rootState.id]: local};
+      let streams = {
+        [context.rootState.id]: local,
+        audio: context.state.localAudio,
+      };
       for (let u of users) {
-        const stream = remote[u.id];
-
-        for (const audio of stream.getAudioTracks())
-          audio.contentHint = "music";
-        for (const video of stream.getVideoTracks())
-          video.contentHint = "motion";
-
+        const stream  = remote[u.id];
         streams[u.id] = remote[u.id];
       }
+      console.log("creating streams", streams);
       return streams;
     },
 

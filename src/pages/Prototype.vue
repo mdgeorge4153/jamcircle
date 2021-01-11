@@ -10,6 +10,7 @@
     <q-page-container>
       <q-page>
         <user-list />
+        <audio autoplay :src-object.prop.camel="audioStream" />
         </q-page> </q-page-container>
     <q-footer>
       <q-toolbar>
@@ -49,6 +50,12 @@ export default {
 
   computed: {
     playing: makeProperty('playing', 'SET_PLAYING'),
+    audioStream() {
+      // let result = this.$store.state.rtc.localAudio;
+      let result = this.$store.getters.remoteAudio;
+      console.log("audio stream: ", result);
+      return result;
+    }
   },
     
   methods: {
