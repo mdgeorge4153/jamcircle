@@ -5,7 +5,11 @@
     <video ref="video" autoplay :src-object.prop.camel="stream" />
 
     <div class="absolute-center">
-      <q-icon v-if="status == 'future'" size="lg" name="slow_motion_video"/>
+      <div v-if="status == 'future'" text-align="center" >
+        <q-icon size="lg" name="slow_motion_video"/>
+        <br />
+        Future
+        </div>
       <q-circular-progress indeterminate v-if="status == 'past' && !stream" size="lg"/>
       </div>
     <!--
@@ -14,7 +18,7 @@
 
     <div class="username text-h6 absolute-top-left q-ma-sm">
       <q-icon v-if="icon" v-bind:name="icon"/>
-      {{ username }} {{ id.substring(0,5) }}
+      {{ username == "" ? "nameless jammer" : username }}
       </div>
 
     <div v-if="playing == 'muted'" class="absolute-bottom-right">
