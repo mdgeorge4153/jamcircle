@@ -7,7 +7,7 @@
       dark
       placeholder="your name">
     <template v-slot:prepend>
-      <q-btn flat :icon="icon" color="white">
+      <q-btn flat dense :icon="icon" color="white">
         <q-menu>
           <q-list>
             <q-item v-for="option in icons" v-bind:key="option.name"

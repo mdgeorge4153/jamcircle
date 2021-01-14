@@ -5,7 +5,8 @@
         <q-toolbar-title class="text-h5">JamCircle</q-toolbar-title>
         <q-space/>
         <user-info />
-        <q-btn icon="cached" @click="cycle" />
+        <q-btn dense flat round icon="cached" @click="cycle" />
+        <q-btn dense flat round icon="chat" @click="right = !right" />
         </q-toolbar> </q-header>
     <q-page-container>
       <q-page>
@@ -30,7 +31,11 @@
             {label: 'mute',      value:'muted', icon: 'volume_off'},
           ]"
         />
-        </q-toolbar> </q-footer> </q-layout>
+        </q-toolbar> </q-footer>
+    <q-drawer show-if-above v-model="right" side="right" bordered>
+      <chat/>
+    </q-drawer>
+  </q-layout>
 </template>
 
 <style>
@@ -42,12 +47,20 @@
 <script>
 import UserList from 'components/UserList.vue';
 import UserInfo from 'components/UserInfo.vue';
+import Chat     from 'components/Chat.vue';
+
 import { makeProperty } from '../util.js';
 
 export default {
   name: 'Prototype',
-  components: { UserList, UserInfo },
+  components: { UserList, UserInfo, Chat },
 
+  data() {
+    return {
+      right: false,
+    };
+  },
+    
   computed: {
     playing: makeProperty('playing', 'SET_PLAYING'),
     audioStream() {

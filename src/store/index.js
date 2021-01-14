@@ -4,6 +4,7 @@ import VueSocketIoExt from 'vue-socket.io-extended';
 import io   from 'socket.io-client';
 
 import rtc from './rtc';
+import chat from './chat';
 
 Vue.use(Vuex);
 
@@ -23,6 +24,7 @@ export default function() {
   const store = new Vuex.Store({
     modules: {
       rtc,
+      chat,
     },
 
     state: {
@@ -30,13 +32,14 @@ export default function() {
       status: {},
 
       username:   '',
-      icon:       'fas fa-microphone-alt',
+      icon:       'fab fa-itunes-note',
       playing:    'solo',
       id:         null,
       socket:     socket,
 
       icons: [
-        { name: 'Other',  icon: 'fas fa-microphone-alt' },
+        { name: 'Other',  icon: 'fab fa-itunes-note' },
+        { name: 'Voice',  icon: 'fas fa-microphone-alt' },
         { name: 'Guitar', icon: 'fas fa-guitar' },
         { name: 'Drums',  icon: 'fas fa-drum'   },
         { name: 'Group',  icon: 'fas fa-users'  },
@@ -47,6 +50,7 @@ export default function() {
     getters: {
       status: (state) => (id) => state.status[id],
       index:  (state) => state.users.findIndex((user) => user.id == state.id),
+      user:   (state) => (id) => state.users.find((user) => user.id == id),
     },
 
     mutations: {

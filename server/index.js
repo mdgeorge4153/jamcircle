@@ -48,6 +48,11 @@ io.sockets.on('connection', function (socket) {
     socket.to(recipient).emit('direct message', msg);
   });
 
+  socket.on('chat', function(message) {
+    console.log("chat message from ", user.id, ": ", message);
+    io.emit('chat', {senderID: user.id, message});
+  });
+
   console.log('connection');
 });
 
