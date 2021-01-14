@@ -3,10 +3,7 @@ import Vue from 'vue';
 export default {
 
   state: {
-    messages: [
-      {id: "abc12", messages: ['hello', 'world']},
-      {id: "bob", messages: ['bob wrote this']},
-    ], // {id: id, messages: string array}
+    messages: [], // entries: {id: id, messages: string array}
   },
 
   mutations: {
