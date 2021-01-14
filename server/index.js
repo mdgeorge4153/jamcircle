@@ -34,6 +34,8 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('fast forward', function() {
     console.log('processing ff');
+    let n = users.indexOf(user);
+    update(users.slice(0,n).concat(users.slice(n+1)).concat(user));
   });
 
   socket.on('disconnect', function() {
