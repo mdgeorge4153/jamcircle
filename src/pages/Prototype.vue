@@ -9,7 +9,7 @@
         <q-btn dense flat round icon="chat" @click="right = !right" />
         </q-toolbar> </q-header>
     <q-page-container>
-      <q-page>
+      <q-page class="column justify-center">
         <user-list />
         <audio autoplay :src-object.prop.camel="audioStream" />
         </q-page> </q-page-container>
@@ -57,7 +57,7 @@ export default {
 
   data() {
     return {
-      right: false,
+      right: true,
     };
   },
     

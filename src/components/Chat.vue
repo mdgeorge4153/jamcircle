@@ -1,7 +1,7 @@
 <template>
-  <div class="q-pa-md column justify-between" style="height: 100%;">
+  <div class="q-pa-sm column justify-between" style="height: 100%;">
     <q-scroll-area
-        class="col q-mb-md"
+        class="q-mb-md col"
         ref="chatArea"
         >
       <q-chat-message
@@ -10,8 +10,8 @@
         :text="entry.messages"
         :sent="entry.id == $store.state.id"
         /> </q-scroll-area>
-    <q-form @submit.prevent="send">
-      <q-input bottom-slots standout="bg-secondary text-white" v-model="text" ref="chat">
+    <q-form @submit.prevent="send" class="col-auto">
+      <q-input dense outline v-model="text" ref="chat">
         <template v-slot:append>
           <q-btn type="submit" round dense flat icon="send" @click="send"/>
         </template>
