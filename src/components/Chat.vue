@@ -40,7 +40,9 @@ export default {
       deep: true,
       handler() {
         console.log("watch");
-        this.$refs.chatArea.setScrollPosition(this.$refs.chatArea.$el.scrollHeight, 10);
+        const scrollArea   = this.$refs.chatArea;
+        const scrollTarget = scrollArea.getScrollTarget();
+        scrollArea.setScrollPosition(scrollTarget.scrollHeight, 300);
       },
     },
   },
