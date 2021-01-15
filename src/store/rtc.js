@@ -135,6 +135,7 @@ export default {
       }
 
       context.commit('SET_MYSTREAM', {video:videoStream, audio:audioStream});
+      context.commit('SET_PLAYING', 'muted');
     },
 
     async getVideos(context) {

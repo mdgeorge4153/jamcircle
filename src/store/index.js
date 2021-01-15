@@ -33,7 +33,7 @@ export default function() {
 
       username:   '',
       icon:       'fab fa-itunes-note',
-      playing:    'solo',
+      playing:    'muted',
       id:         null,
       socket:     socket,
 
