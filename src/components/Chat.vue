@@ -11,7 +11,7 @@
         :sent="entry.id == $store.state.id"
         /> </q-scroll-area>
     <q-form @submit.prevent="send">
-      <q-input bottom-slots standout v-model="text" ref="chat">
+      <q-input bottom-slots standout="bg-secondary text-white" v-model="text" ref="chat">
         <template v-slot:append>
           <q-btn type="submit" round dense flat icon="send" @click="send"/>
         </template>

@@ -80,6 +80,7 @@ export default function() {
       SOCKET_CONNECT(state) {
         state.id = socket.id;
         socket.emit('update', { username: state.username, icon: state.icon, playing: state.playing });
+        socket.emit('log', { message: 'user agent: ' + navigator.userAgent});
       },
 
       SET_USERS(state, users) {
