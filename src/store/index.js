@@ -125,6 +125,10 @@ export default function() {
 
   store.dispatch('initialize');
 
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    socket.emit('log', {message: 'browser error', payload: {msg, url, lineNo, columnNo, error}});
+  };
+
   return store;
 };
 

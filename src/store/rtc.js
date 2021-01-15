@@ -145,7 +145,9 @@ export default {
       const remoteStreams = waitFor(this, (state) => state.rtc.remoteStreams);
 
       let local = await localStream;
+      context.rootState.socket.emit('log', {message: 'local stream ready'});
       let remote = await remoteStreams;
+      context.rootState.socket.emit('log', {message: 'remote streams ready'});
 
       let streams = {
         [context.rootState.id]: local,
@@ -235,6 +237,7 @@ export default {
       console.log("my pred:", context.state.predID);
       console.log("my succ:", context.state.succID);
       console.log('unexpected direct message', {senderID, ...msg});
+      context.rootState.socket.emit('log', {message: 'unexpected direct message', payload: {senderID, ...msg}});
     },
 
   },
