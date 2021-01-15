@@ -17,6 +17,7 @@ const io = require('socket.io')(http);
 
 let users    = [];
 let sequence = 0;
+let chat     = [];
 
 function update(newUsers) {
   users = newUsers;
@@ -67,12 +68,16 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('chat', function(message) {
     info('CHAT', message);
+    chat.push({senderID: user.id, message});
     io.emit('chat', {senderID: user.id, message});
   });
 
   socket.on('log', function({message,payload}) {
     info('RLOG', message, payload);
   });
+
+  for (let msg of chat)
+    socket.emit('chat', msg);
 
   info('CONN', 'connection established');
 });
