@@ -2,10 +2,11 @@
   <q-layout view="hHh lpR fFf">
     <q-header elevated>
       <q-toolbar>
-        <q-toolbar-title class="text-h5">JamCircle</q-toolbar-title>
+        <q-btn dense flat round icon="cached" @click="cycle" />
+        <q-toolbar-title class="text-h5">
+          JamCircle</q-toolbar-title>
         <q-space/>
         <user-info />
-        <q-btn dense flat round icon="cached" @click="cycle" />
         <q-btn dense flat round icon="chat" @click="right = !right" />
         </q-toolbar> </q-header>
     <q-page-container>
