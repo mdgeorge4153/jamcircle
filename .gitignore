@@ -1,3 +1,5 @@
+server.log
+
 .DS_Store
 .thumbs.db
 node_modules
