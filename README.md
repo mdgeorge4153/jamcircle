@@ -14,9 +14,18 @@ skipping forward.
 Players can decide whether they want to solo or not.  If not, they will
 automatically jump to the end of the line when it is their turn for a solo.
  
-This software is currently just a prototype; to run it, you need to install
-a bunch of npm packages, run the main server using npm run dev, and run the
-frontend server using quasar dev.
+
+Building and running
+====================
+
+This software is currently just a prototype, run it at your own risk.
+
+    npm install
+    npm run dev # run the backend server
+    quasar dev  # run the quasar dev server
+
+    # navigate to https://localhost:8080/
+
 
 Future ideas
 ============
