@@ -5,6 +5,7 @@ import io   from 'socket.io-client';
 
 import rtc from './rtc';
 import chat from './chat';
+import poll from './poll';
 
 Vue.use(Vuex);
 
@@ -25,6 +26,7 @@ export default function() {
     modules: {
       rtc,
       chat,
+      poll,
     },
 
     state: {

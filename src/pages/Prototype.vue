@@ -7,12 +7,13 @@
           JamCircle</q-toolbar-title>
         <q-space/>
         <user-info />
-        <q-btn dense flat round icon="chat" @click="right = !right" />
+        <q-btn dense flat round icon="chat" @click="chat = !chat" />
         </q-toolbar> </q-header>
     <q-page-container>
       <q-page class="column justify-center">
         <user-list />
         <audio autoplay :src-object.prop.camel="audioStream" />
+        <quality-poll />
         </q-page> </q-page-container>
     <q-footer>
       <q-toolbar>
@@ -33,7 +34,7 @@
           ]"
         />
         </q-toolbar> </q-footer>
-    <q-drawer show-if-above v-model="right" side="right" bordered>
+    <q-drawer v-model="chat" side="right" bordered>
       <chat/>
     </q-drawer>
   </q-layout>
@@ -49,16 +50,17 @@
 import UserList from 'components/UserList.vue';
 import UserInfo from 'components/UserInfo.vue';
 import Chat     from 'components/Chat.vue';
+import QualityPoll from 'components/QualityPoll.vue';
 
 import { makeProperty } from '../util.js';
 
 export default {
   name: 'Prototype',
-  components: { UserList, UserInfo, Chat },
+  components: { UserList, UserInfo, Chat, QualityPoll },
 
   data() {
     return {
-      right: true,
+      chat: true,
     };
   },
     
@@ -69,7 +71,7 @@ export default {
       let result = this.$store.getters.remoteAudio;
       console.log("audio stream: ", result);
       return result;
-    }
+    },
   },
     
   methods: {
