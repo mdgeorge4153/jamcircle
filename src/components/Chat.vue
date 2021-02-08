@@ -55,10 +55,7 @@ export default {
     },
 
     username(id) {
-      const user = this.$store.getters.user(id);
-      if (!user || !user.username)
-        return "Nameless jammer";
-      return user.username;
+      return this.$store.getters.name(id);
     }
   },
 }

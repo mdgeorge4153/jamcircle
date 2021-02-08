@@ -18,7 +18,7 @@
 
     <div class="username text-h6 absolute-top-left q-ma-sm">
       <q-icon v-if="icon" v-bind:name="icon"/>
-      {{ username == "" ? "nameless jammer" : username }}
+      {{ name }}
       </div>
 
     <div v-if="playing == 'muted'" class="absolute-bottom-right">
@@ -75,6 +75,10 @@ export default {
     stream() {
       return this.$store.getters.stream(this.id);
     },
+
+    name() {
+      return this.$store.getters.name(this.id);
+    }
   },
 }
 </script>

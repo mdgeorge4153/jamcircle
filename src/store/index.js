@@ -51,6 +51,13 @@ export default function() {
       status: (state) => (id) => state.status[id],
       index:  (state) => state.users.findIndex((user) => user.id == state.id),
       user:   (state) => (id) => state.users.find((user) => user.id == id),
+      name:   (state,getters) => (id) => {
+                const user = getters.user(id);
+                if (!user || !user.username)
+                  return "Nameless (" + id.slice(0,5) + ")";
+                else
+                  return user.username;
+              },
     },
 
     mutations: {
