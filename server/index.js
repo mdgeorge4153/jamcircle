@@ -78,6 +78,10 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  socket.on('poll_result', function(payload) {
+    info('POLL', "received poll result", payload);
+  });
+
   socket.on('log', function({message,payload}) {
     info('RLOG', message, payload);
   });
