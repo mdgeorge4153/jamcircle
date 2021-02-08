@@ -1,8 +1,8 @@
 <template>
   <q-dialog seamless position="top" v-model="dialog">
-    <q-card style="min-width: 600px;" >
+    <q-card style="min-width: 800px; background: rgba(255,255,255,1.0);" >
       <q-card-section>
-        <div class="text-h6">Feedback</div>
+        <div class="text-h6">Audio and Video Feedback</div>
       </q-card-section>
 
       <q-separator />
@@ -12,24 +12,29 @@
         @reset="onReset">
 
         <q-card-section style="max-height: 50vh" class="scroll">
+          <p>Please fill out this form to indicate whether there are any problems
+             with the audio or video for each other jammer:</p>
           <table class="q-mb-lg">
             <tbody>
               <tr v-for="entry in entries" :key="entry.id">
-                <td>{{ entry.name }}</td>
-                <td><q-select style="width: 150px" class="q-ma-sm"
+                <th>{{ entry.name }}</th>
+                <td><q-select style="width: 200px" class="q-ma-sm q-pa-sm"
                               v-model="entry.audio"
                               label="Audio quality"
                               :options="audioOptions"
+                              filled
                               :disable="entry.muted"
                               :rules="[val => !!val || '* Required']"/></td>
-                <td><q-select style="width: 150px" class="q-ma-sm"
+                <td><q-select style="width: 200px" class="q-ma-sm q-pa-sm"
                               v-model="entry.video"
                               label="Video quality"
                               :options="videoOptions"
+                              filled
                               :disable="entry.novid"
                               :rules="[val => !!val || '* Required']"/></td>
-                <td><q-input  style="width: 150px" class="q-ma-sm"
+                <td><q-input  style="width: 200px" class="q-ma-sm q-pa-sm"
                               v-model="entry.other"
+                              filled
                               label="Additional note"/> </td> </tr>
 
               </tbody> </table>
